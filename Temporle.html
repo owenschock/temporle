@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temporle: The Glitch</title>
+    <meta property="og:title" content="Temporle: The Historical Geography Game">
+    <meta property="og:description" content="Can you locate the lost empires of history? Travel through time and test your knowledge in this daily strategy game.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourwebsite.com/temporle"> <meta property="og:image" content="https://ui-avatars.com/api/?name=Te&background=4f46e5&color=fff&size=512&font-size=0.5"> <meta name="twitter:card" content="summary_large_image">
+    <meta name="theme-color" content="#4f46e5">
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%234f46e5'/><circle cx='50' cy='50' r='40' fill='%23ffffff'/><path d='M50 20 V50 L70 70' stroke='%234f46e5' stroke-width='8' stroke-linecap='round'/></svg>">
+    <style>
+        :root {
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            --radius: 24px;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background 1.5s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            position: relative;
+            z-index: 10;
+            min-height: 600px;
+        }
+
+        /* HEADER */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(0,0,0,0.05);
+            padding-bottom: 20px;
+        }
+
+        .brand { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; background: -webkit-linear-gradient(45deg, var(--text-main), var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
+        
+        .timeline-pill {
+            background: rgba(0,0,0,0.05);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+
+        .status-area { text-align: right; min-width: 160px; }
+        .health-track {
+            background: rgba(0,0,0,0.1);
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), #34d399);
+            width: 100%;
+            transition: width 0.5s ease;
+        }
+        .health-fill.danger { background: linear-gradient(90deg, var(--danger), #f87171); }
+
+        /* GRID */
+        .game-grid { display: grid; grid-template-columns: 1fr 340px; gap: 30px; height: 100%; }
+        @media (max-width: 850px) { .game-grid { grid-template-columns: 1fr; } .radar-column { display: none; } }
+
+        /* CARDS */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .mission-text { font-size: 1.3rem; font-weight: 600; line-height: 1.4; }
+        .hint-box { margin-top: 15px; padding: 12px; background: rgba(245, 158, 11, 0.1); border-left: 4px solid var(--accent); border-radius: 8px; font-weight: 600; color: #92400e; animation: fadeIn 0.5s; }
+
+        /* INPUT */
+        .input-wrapper { position: relative; display: flex; gap: 12px; margin-bottom: 20px; }
+        input { flex: 1; padding: 18px 24px; border: 2px solid transparent; background: white; border-radius: 14px; font-size: 1.1rem; outline: none; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: 0.3s; font-family: inherit; }
+        input:focus { box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15); border-color: var(--primary); }
+        .btn-scan { background: var(--text-main); color: white; border: none; padding: 0 32px; border-radius: 14px; font-weight: 700; font-size: 1.1rem; cursor: pointer; transition: 0.2s; }
+        .btn-scan:hover { background: black; transform: scale(1.02); }
+
+        /* RADAR */
+        .radar-box { width: 100%; aspect-ratio: 1/1; background: rgba(255,255,255,0.5); border-radius: 50%; border: 1px solid rgba(255,255,255,0.8); position: relative; box-shadow: inset 0 4px 12px rgba(0,0,0,0.05); }
+        .radar-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 1px solid rgba(0,0,0,0.1); border-radius: 50%; }
+        .r1 { width: 33%; height: 33%; } .r2 { width: 66%; height: 66%; } .r3 { width: 99%; height: 99%; }
+        .blip { position: absolute; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; transform: translate(-50%, -50%); box-shadow: 0 4px 6px rgba(0,0,0,0.15); transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        /* LOGS */
+        .log-container { display: flex; flex-direction: column; gap: 10px; max-height: 350px; overflow-y: auto; }
+        .log-card { display: flex; justify-content: space-between; padding: 14px 20px; background: rgba(255,255,255,0.7); border-radius: 12px; border: 1px solid rgba(0,0,0,0.05); animation: slideIn 0.3s ease; font-weight: 700; }
+        .log-card.close { border: 2px solid var(--accent); background: #fffbeb; color: #92400e; }
+
+        /* SHOP */
+        .shop-row { display: flex; gap: 12px; margin: 20px 0; }
+        .shop-btn { flex: 1; background: white; border: 1px solid rgba(0,0,0,0.1); padding: 12px; border-radius: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; display: flex; justify-content: center; gap: 8px; }
+        .shop-btn:hover:not(:disabled) { transform: translateY(-2px); color: var(--primary); border-color: var(--primary); }
+        .shop-btn:disabled { opacity: 0.5; filter: grayscale(1); }
+        .cost-badge { background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
+
+        /* MENU SCREEN */
+        #mainMenu {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.95); z-index: 50;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            border-radius: var(--radius); text-align: center;
+        }
+        .mode-btn {
+            width: 80%; max-width: 400px; padding: 20px; margin: 10px;
+            border: 1px solid rgba(0,0,0,0.1); border-radius: 16px; background: white;
+            font-size: 1.2rem; font-weight: 800; cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .mode-btn:hover { transform: scale(1.02); border-color: var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        .mode-desc { font-size: 0.9rem; font-weight: 500; color: var(--text-muted); }
+        
+        /* OVERLAYS */
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 100; display: none; justify-content: center; align-items: center; }
+        .modal { background: white; padding: 40px; width: 90%; max-width: 450px; border-radius: 28px; text-align: center; animation: popUp 0.4s; }
+        .btn-modal { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.2rem; font-weight: 700; cursor: pointer; margin-top: 20px; }
+        .btn-modal:disabled { background: var(--text-muted); cursor: not-allowed; opacity: 0.7; }
+
+        /* AUTOFILL */
+        #suggestions { position: absolute; top: 100%; left: 0; right: 0; background: white; border-radius: 16px; margin-top: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); z-index: 60; max-height: 250px; overflow-y: auto; display: none; padding: 5px; }
+        .s-item { padding: 12px 20px; cursor: pointer; transition: 0.1s; font-weight: 500; }
+        .s-item:hover { background: #f3f4f6; color: var(--primary); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .hidden { display: none !important; }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    
+    <div id="mainMenu">
+        <h1 style="font-size: 3.5rem; margin-bottom: 10px; letter-spacing: -2px; background: -webkit-linear-gradient(45deg, #111, #4f46e5); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Temporle</h1>
+        <p style="color: var(--text-muted); margin-bottom: 40px;">The Historical Map Game: Can You Save the Timeline?</p>
+        <button class="mode-btn" onclick="initMode('story')">
+            <span>⏳ Time Stream</span>
+            <span class="mode-desc">Campaign Mode. 50 Eras.</span>
+        </button>
+        <button class="mode-btn" onclick="initMode('daily')">
+            <span>📅 Daily Paradox</span>
+            <span class="mode-desc">A unique challenge every 24h.</span>
+        </button>
+    </div>
+
+    <div id="storyModal" class="overlay" style="z-index: 200;">
+        <div class="modal" style="border: 2px solid var(--primary); text-align: left;">
+            <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
+                INCOMING TRANSMISSION // <span id="storySender">SENDER</span>
+            </div>
+            <h2 id="storyTitle" style="font-size: 1.5rem; margin-bottom: 20px; color: var(--text-main);">TITLE</h2>
+            <p id="storyMsg" style="line-height: 1.6; color: var(--text-muted); margin-bottom: 30px; font-family: monospace; font-size: 1rem;"></p>
+            <button class="btn-modal" onclick="closeStory()">PROCEED</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="brand" onclick="location.reload()">Temporle</div>
+        <div id="yearDisplay" class="timeline-pill">
+            <span id="yearVal">----</span>
+        </div>
+        <div class="status-area">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:700; color:var(--text-muted);">
+                <span>Integrity</span>
+                <span id="healthText">100%</span>
+            </div>
+            <div class="health-track">
+                <div id="healthBar" class="health-fill"></div>
+            </div>
+            <div id="levelCountDisplay" style="font-size:0.7rem; margin-top:5px; font-weight:700; color:var(--text-muted); opacity: 0.8;"></div>
+            <div id="modeLabel" style="text-align:right; font-size:0.7rem; margin-top:2px; font-weight:700; color:var(--primary);"></div>
+        </div>
+    </header>
+
+    <div class="game-grid">
+        <div>
+            <div class="glass-card">
+                <div class="mission-text" style="font-size: 0.8rem; text-transform: uppercase; color: var(--primary); font-weight: 800; margin-bottom: 5px;">Objective</div>
+                <div id="scenarioText" class="mission-text">Loading...</div>
+                <div id="hintText" class="hint-box hidden"></div>
+            </div>
+            <div class="shop-row">
+                <button class="shop-btn" id="btnAbility1" onclick="useAbility('continent')">
+                    <span class="cost-badge">-15%</span> <span>Macro</span>
+                </button>
+                <button class="shop-btn" id="btnAbility2" onclick="useAbility('letter')">
+                    <span class="cost-badge">-10%</span> <span>Decrypt</span>
+                </button>
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="countryInput" placeholder="Enter coordinates (Country)..." autocomplete="off">
+                <button class="btn-scan" onclick="handleGuess()">SCAN</button>
+                <div id="suggestions"></div>
+            </div>
+            <div id="logList" class="log-container"></div>
+        </div>
+        <div class="radar-column">
+            <div class="glass-card" style="text-align: center;">
+                <div style="font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted); font-weight: 800; margin-bottom: 10px;">Sensors</div>
+                <div class="radar-box" id="radarScreen">
+                    <div class="radar-ring r1"></div>
+                    <div class="radar-ring r2"></div>
+                    <div class="radar-ring r3"></div>
+                </div>
+                <div id="radarReadout" style="font-weight: 700; color: var(--text-muted); margin-top:10px;">Standby</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="winModal" class="overlay">
+    <div class="modal">
+        <div style="font-size: 4rem;">✅</div>
+        <h2>Target Secured</h2>
+        <p id="winMsg" style="font-weight: 700; color: var(--primary);"></p>
+        <p id="winNote" style="color: var(--text-muted); margin-bottom: 20px;"></p>
+        <button id="nextLvlBtn" class="btn-modal hidden" onclick="nextLevel()">Jump Forward</button>
+        <div id="dailyCompleteUI" class="hidden">
+            <div style="background: #f3f4f6; padding: 15px; border-radius: 12px; margin-top: 20px;">
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Next Paradox In</div>
+                <div id="countdown" style="font-size: 2rem; font-weight: 800; color: var(--text-main);">00:00:00</div>
+            </div>
+            <button class="btn-modal" style="background: var(--text-main); margin-top: 10px;" onclick="location.reload()">Main Menu</button>
+        </div>
+    </div>
+</div>
+
+<div id="loseModal" class="overlay">
+    <div class="modal">
+        <div style="font-size: 4rem;">💥</div>
+        <h2>Timeline Collapse</h2>
+        <p>Integrity failure. Paradox detected.</p>
+        <div id="dailyFailUI" class="hidden" style="margin-top: 20px;">
+             <div style="color: var(--danger); font-weight:700; margin-bottom: 15px;">Daily Attempt Failed</div>
+             <button class="btn-modal" style="background: var(--text-main);" onclick="location.reload()">Main Menu</button>
+        </div>
+        <button id="retryBtn" class="btn-modal" style="background: var(--text-main);" onclick="location.reload()">Reboot</button>
+    </div>
+</div>
+
+<div id="endGameModal" class="overlay">
+    <div class="modal">
+        <div style="font-size: 4rem;">🏆</div>
+        <h2>Mission Complete</h2>
+        <p>You have successfully navigated the Time Stream.</p>
+        <button class="btn-modal" onclick="location.reload()">Return to Base</button>
+    </div>
+</div>
+
+<script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playTone(freq, type, dur) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    }
+    const sfx = {
+        scan: () => playTone(600, 'sine', 0.1), err: () => playTone(150, 'sawtooth', 0.3),
+        click: () => playTone(800, 'sine', 0.05), win: () => { playTone(400,'sine',0.1); setTimeout(()=>playTone(800,'sine',0.4), 100); }
+    };
+
+    const countries = [
+        {name: "Afghanistan", lat: 33.93, lon: 67.71}, {name: "Albania", lat: 41.15, lon: 20.17}, {name: "Algeria", lat: 28.03, lon: 1.66},
+        {name: "Andorra", lat: 42.50, lon: 1.52}, {name: "Angola", lat: -11.20, lon: 17.87}, {name: "Argentina", lat: -38.42, lon: -63.62},
+        {name: "Armenia", lat: 40.06, lon: 45.03}, {name: "Australia", lat: -25.27, lon: 133.78}, {name: "Austria", lat: 47.52, lon: 14.55},
+        {name: "Azerbaijan", lat: 40.14, lon: 47.57}, {name: "Bahamas", lat: 25.03, lon: -77.39}, {name: "Bahrain", lat: 26.06, lon: 50.55},
+        {name: "Bangladesh", lat: 23.68, lon: 90.35}, {name: "Barbados", lat: 13.19, lon: -59.54}, {name: "Belarus", lat: 53.70, lon: 27.95},
+        {name: "Belgium", lat: 50.50, lon: 4.47}, {name: "Belize", lat: 17.18, lon: -88.49}, {name: "Benin", lat: 9.30, lon: 2.31},
+        {name: "Bhutan", lat: 27.51, lon: 90.43}, {name: "Bolivia", lat: -16.29, lon: -63.58}, {name: "Bosnia and Herzegovina", lat: 43.91, lon: 17.67},
+        {name: "Botswana", lat: -22.32, lon: 24.68}, {name: "Brazil", lat: -14.24, lon: -51.93}, {name: "Brunei", lat: 4.53, lon: 114.72},
+        {name: "Bulgaria", lat: 42.73, lon: 25.48}, {name: "Burkina Faso", lat: 12.23, lon: -1.56}, {name: "Burundi", lat: -3.37, lon: 29.91},
+        {name: "Cambodia", lat: 12.56, lon: 104.99}, {name: "Cameroon", lat: 7.36, lon: 12.35}, {name: "Canada", lat: 56.13, lon: -106.35},
+        {name: "Central African Republic", lat: 6.61, lon: 20.93}, {name: "Chad", lat: 15.45, lon: 18.73}, {name: "Chile", lat: -35.67, lon: -71.54},
+        {name: "China", lat: 35.86, lon: 104.19}, {name: "Colombia", lat: 4.57, lon: -74.30}, {name: "Comoros", lat: -11.87, lon: 43.87},
+        {name: "Congo (DRC)", lat: -4.03, lon: 21.75}, {name: "Congo (Republic)", lat: -0.22, lon: 15.82}, {name: "Costa Rica", lat: 9.74, lon: -83.75},
+        {name: "Croatia", lat: 45.10, lon: 15.20}, {name: "Cuba", lat: 21.52, lon: -77.78}, {name: "Cyprus", lat: 35.12, lon: 33.42},
+        {name: "Czech Republic", lat: 49.81, lon: 15.47}, {name: "Denmark", lat: 56.26, lon: 9.50}, {name: "Djibouti", lat: 11.82, lon: 42.59},
+        {name: "Dominican Republic", lat: 18.73, lon: -70.16}, {name: "Ecuador", lat: -1.83, lon: -78.18}, {name: "Egypt", lat: 26.82, lon: 30.80},
+        {name: "El Salvador", lat: 13.79, lon: -88.89}, {name: "Equatorial Guinea", lat: 1.65, lon: 10.26}, {name: "Eritrea", lat: 15.17, lon: 39.78},
+        {name: "Estonia", lat: 58.59, lon: 25.01}, {name: "Ethiopia", lat: 9.14, lon: 40.48}, {name: "Fiji", lat: -17.71, lon: 178.06},
+        {name: "Finland", lat: 61.92, lon: 25.74}, {name: "France", lat: 46.22, lon: 2.21}, {name: "Gabon", lat: -0.80, lon: 11.60},
+        {name: "Gambia", lat: 13.44, lon: -15.31}, {name: "Georgia", lat: 42.31, lon: 43.35}, {name: "Germany", lat: 51.16, lon: 10.45},
+        {name: "Ghana", lat: 7.94, lon: -1.02}, {name: "Greece", lat: 39.07, lon: 21.82}, {name: "Guatemala", lat: 15.78, lon: -90.23},
+        {name: "Guinea", lat: 9.94, lon: -9.69}, {name: "Guyana", lat: 4.86, lon: -58.93}, {name: "Haiti", lat: 18.97, lon: -72.28},
+        {name: "Honduras", lat: 15.20, lon: -86.24}, {name: "Hungary", lat: 47.16, lon: 19.50}, {name: "Iceland", lat: 64.96, lon: -19.02},
+        {name: "India", lat: 20.59, lon: 78.96}, {name: "Indonesia", lat: -0.78, lon: 113.92}, {name: "Iran", lat: 32.42, lon: 53.68},
+        {name: "Iraq", lat: 33.22, lon: 43.67}, {name: "Ireland", lat: 53.14, lon: -7.69}, {name: "Israel", lat: 31.04, lon: 34.85},
+        {name: "Italy", lat: 41.87, lon: 12.56}, {name: "Ivory Coast", lat: 7.54, lon: -5.54}, {name: "Jamaica", lat: 18.10, lon: -77.29},
+        {name: "Japan", lat: 36.20, lon: 138.25}, {name: "Jordan", lat: 30.58, lon: 36.23}, {name: "Kazakhstan", lat: 48.01, lon: 66.92},
+        {name: "Kenya", lat: -0.02, lon: 37.90}, {name: "Kuwait", lat: 29.31, lon: 47.48}, {name: "Kyrgyzstan", lat: 41.20, lon: 74.76},
+        {name: "Laos", lat: 19.85, lon: 102.49}, {name: "Latvia", lat: 56.87, lon: 24.60}, {name: "Lebanon", lat: 33.85, lon: 35.86},
+        {name: "Lesotho", lat: -29.60, lon: 28.23}, {name: "Liberia", lat: 6.42, lon: -9.42}, {name: "Libya", lat: 26.33, lon: 17.22},
+        {name: "Lithuania", lat: 55.16, lon: 23.88}, {name: "Luxembourg", lat: 49.81, lon: 6.12}, {name: "Madagascar", lat: -18.76, lon: 46.86},
+        {name: "Malawi", lat: -13.25, lon: 34.30}, {name: "Malaysia", lat: 4.21, lon: 101.97}, {name: "Mali", lat: 17.57, lon: -3.99},
+        {name: "Malta", lat: 35.93, lon: 14.37}, {name: "Mauritania", lat: 21.00, lon: -10.94}, {name: "Mexico", lat: 23.63, lon: -102.55},
+        {name: "Moldova", lat: 47.41, lon: 28.36}, {name: "Mongolia", lat: 46.86, lon: 103.84}, {name: "Montenegro", lat: 42.70, lon: 19.37},
+        {name: "Morocco", lat: 31.79, lon: -7.09}, {name: "Mozambique", lat: -18.66, lon: 35.52}, {name: "Myanmar", lat: 21.91, lon: 95.95},
+        {name: "Namibia", lat: -22.95, lon: 18.49}, {name: "Nepal", lat: 28.39, lon: 84.12}, {name: "Netherlands", lat: 52.13, lon: 5.29},
+        {name: "New Zealand", lat: -40.90, lon: 174.88}, {name: "Nicaragua", lat: 12.86, lon: -85.20}, {name: "Niger", lat: 17.60, lon: 8.08},
+        {name: "Nigeria", lat: 9.08, lon: 8.67}, {name: "North Korea", lat: 40.33, lon: 127.51}, {name: "North Macedonia", lat: 41.60, lon: 21.74},
+        {name: "Norway", lat: 60.47, lon: 8.46}, {name: "Oman", lat: 21.51, lon: 55.92}, {name: "Pakistan", lat: 30.37, lon: 69.34},
+        {name: "Panama", lat: 8.53, lon: -80.78}, {name: "Papua New Guinea", lat: -6.31, lon: 143.95}, {name: "Paraguay", lat: -23.44, lon: -58.44},
+        {name: "Peru", lat: -9.18, lon: -75.01}, {name: "Philippines", lat: 12.87, lon: 121.77}, {name: "Poland", lat: 51.91, lon: 19.14},
+        {name: "Portugal", lat: 39.39, lon: -8.22}, {name: "Qatar", lat: 25.35, lon: 51.18}, {name: "Romania", lat: 45.94, lon: 24.96},
+        {name: "Russia", lat: 61.52, lon: 105.31}, {name: "Rwanda", lat: -1.94, lon: 29.87}, {name: "Saudi Arabia", lat: 23.88, lon: 45.07},
+        {name: "Senegal", lat: 14.49, lon: -14.45}, {name: "Serbia", lat: 44.01, lon: 21.00}, {name: "Sierra Leone", lat: 8.46, lon: -11.77},
+        {name: "Singapore", lat: 1.35, lon: 103.81}, {name: "Slovakia", lat: 48.66, lon: 19.69}, {name: "Slovenia", lat: 46.15, lon: 14.99},
+        {name: "Somalia", lat: 5.15, lon: 46.19}, {name: "South Africa", lat: -30.55, lon: 22.93}, {name: "South Korea", lat: 35.90, lon: 127.76},
+        {name: "South Sudan", lat: 6.87, lon: 31.30}, {name: "Spain", lat: 40.46, lon: -3.74}, {name: "Sri Lanka", lat: 7.87, lon: 80.77},
+        {name: "Sudan", lat: 12.86, lon: 30.21}, {name: "Suriname", lat: 3.91, lon: -56.02}, {name: "Sweden", lat: 60.12, lon: 18.64},
+        {name: "Switzerland", lat: 46.81, lon: 8.22}, {name: "Syria", lat: 34.80, lon: 38.99}, {name: "Taiwan", lat: 23.69, lon: 120.96},
+        {name: "Tajikistan", lat: 38.86, lon: 71.27}, {name: "Tanzania", lat: -6.36, lon: 34.88}, {name: "Thailand", lat: 15.87, lon: 100.99},
+        {name: "Togo", lat: 8.61, lon: 0.82}, {name: "Tunisia", lat: 33.88, lon: 9.53}, {name: "Turkey", lat: 38.96, lon: 35.24},
+        {name: "Turkmenistan", lat: 38.96, lon: 59.55}, {name: "Uganda", lat: 1.37, lon: 32.29}, {name: "Ukraine", lat: 48.37, lon: 31.16},
+        {name: "United Arab Emirates", lat: 23.42, lon: 53.84}, {name: "United Kingdom", lat: 55.37, lon: -3.43}, {name: "United States", lat: 37.09, lon: -95.71},
+        {name: "Uruguay", lat: -32.52, lon: -55.76}, {name: "Uzbekistan", lat: 41.37, lon: 64.58}, {name: "Venezuela", lat: 6.42, lon: -66.58},
+        {name: "Vietnam", lat: 14.05, lon: 108.27}, {name: "Yemen", lat: 15.55, lon: 48.51}, {name: "Zambia", lat: -13.13, lon: 27.84},
+        {name: "Zimbabwe", lat: -19.01, lon: 29.15}
+    ];
+
+    // --- STORY LEVELS (Expanded & Diversified) ---
+    let storyLevels = [
+        // Era 1: Origins (3500 BC - 200 BC)
+        { year: "3300 BC", name: "Indus Valley Civilization", center: {lat: 27.66, lon: 68.21}, validCountry: "Pakistan", scenario: "Advanced urban planning in the floodplains.", note: "Mohenjo-daro, Pakistan.", continent: "Asia" },
+        { year: "3000 BC", name: "Caral-Supe", center: {lat: -10.89, lon: -77.52}, validCountry: "Peru", scenario: "The oldest civilization in the Americas.", note: "Caral, Peru.", continent: "South America" },
+        { year: "2500 BC", name: "Old Kingdom Egypt", center: {lat: 29.97, lon: 31.13}, validCountry: "Egypt", scenario: "The Great Pyramid is under construction.", note: "Memphis/Giza, Egypt.", continent: "Africa" },
+        { year: "1600 BC", name: "Shang Dynasty", center: {lat: 36.10, lon: 114.39}, validCountry: "China", scenario: "The earliest confirmed dynasty.", note: "Yin (Anyang), China.", continent: "Asia" },
+        { year: "1600 BC", name: "Minoan Civilization", center: {lat: 35.30, lon: 25.16}, validCountry: "Greece", scenario: "A palace complex on an island, home of the Minotaur.", note: "Knossos (Crete), Greece.", continent: "Europe" },
+        { year: "1200 BC", name: "Olmec Civilization", center: {lat: 18.10, lon: -94.04}, validCountry: "Mexico", scenario: "The 'Rubber People' carve colossal heads.", note: "La Venta, Mexico.", continent: "North America" },
+        { year: "814 BC", name: "Carthage (Founding)", center: {lat: 36.85, lon: 10.32}, validCountry: "Tunisia", scenario: "Queen Dido founds a city to rival Rome.", note: "Carthage, Tunisia.", continent: "Africa" },
+        { year: "500 BC", name: "Nok Culture", center: {lat: 9.60, lon: 8.00}, validCountry: "Nigeria", scenario: "Terracotta statues appear in West Africa.", note: "Central Nigeria.", continent: "Africa" },
+        { year: "480 BC", name: "Achaemenid Empire", center: {lat: 29.93, lon: 52.89}, validCountry: "Iran", scenario: "Xerxes rules the largest empire the world has seen.", note: "Persepolis, Iran.", continent: "Asia" },
+        { year: "300 BC", name: "Mauryan Empire", center: {lat: 25.61, lon: 85.11}, validCountry: "India", scenario: "Ashoka the Great spreads Buddhism.", note: "Pataliputra, India.", continent: "Asia" },
+
+        // Era 2: Classical & Medieval (50 AD - 1350 AD)
+        { year: "50 AD", name: "Roman Empire", center: {lat: 41.90, lon: 12.49}, validCountry: "Italy", scenario: "The Senate is in session. All roads lead here.", note: "Rome, Italy.", continent: "Europe" },
+        { year: "200 AD", name: "Teotihuacan", center: {lat: 19.69, lon: -98.84}, validCountry: "Mexico", scenario: "The City of the Gods dominates the valley.", note: "Teotihuacan, Mexico.", continent: "North America" },
+        { year: "400 AD", name: "Kingdom of Aksum", center: {lat: 14.13, lon: 38.72}, validCountry: "Ethiopia", scenario: "A powerful trading empire adopts Christianity.", note: "Aksum, Ethiopia.", continent: "Africa" },
+        { year: "550 AD", name: "Byzantine Empire", center: {lat: 41.00, lon: 28.97}, validCountry: "Turkey", scenario: "The Hagia Sophia is built.", note: "Constantinople, Turkey.", continent: "Europe" },
+        { year: "650 AD", name: "Umayyad Caliphate", center: {lat: 33.51, lon: 36.29}, validCountry: "Syria", scenario: "The first great Muslim dynasty.", note: "Damascus, Syria.", continent: "Asia" },
+        { year: "750 AD", name: "Tang Dynasty", center: {lat: 34.34, lon: 108.93}, validCountry: "China", scenario: "The Golden Age of Asian poetry.", note: "Chang'an, China.", continent: "Asia" },
+        { year: "800 AD", name: "Khmer Empire", center: {lat: 13.41, lon: 103.86}, validCountry: "Cambodia", scenario: "A massive temple complex rising from the jungle.", note: "Angkor, Cambodia.", continent: "Asia" },
+        { year: "950 AD", name: "Cordoba Caliphate", center: {lat: 37.88, lon: -4.77}, validCountry: "Spain", scenario: "The intellectual center of Europe.", note: "Cordoba, Spain.", continent: "Europe" },
+        { year: "1100 AD", name: "Great Zimbabwe", center: {lat: -20.27, lon: 30.93}, validCountry: "Zimbabwe", scenario: "A fortress of stone in Southern Africa.", note: "Great Zimbabwe.", continent: "Africa" },
+        { year: "1206 AD", name: "Mongol Empire", center: {lat: 47.91, lon: 106.91}, validCountry: "Mongolia", scenario: "Genghis Khan unites the tribes.", note: "Avarga, Mongolia.", continent: "Asia" },
+        { year: "1250 AD", name: "Cahokia", center: {lat: 38.66, lon: -90.06}, validCountry: "United States", scenario: "The largest city north of Mexico.", note: "Cahokia Mounds (Illinois), USA.", continent: "North America" },
+        { year: "1324 AD", name: "Mali Empire", center: {lat: 12.6, lon: -8.0}, validCountry: "Mali", scenario: "The richest man in history rules here.", note: "Niani, Mali.", continent: "Africa" },
+        { year: "1350 AD", name: "Majapahit Empire", center: {lat: -7.50, lon: 112.40}, validCountry: "Indonesia", scenario: "The spice trade thalassocracy.", note: "Trowulan, Indonesia.", continent: "Asia" },
+
+        // Era 3: Early Modern (1400 AD - 1800 AD)
+        { year: "1438 AD", name: "Inca Empire", center: {lat: -13.53, lon: -71.96}, validCountry: "Peru", scenario: "Capital of the Four Suyus high in the Andes.", note: "Cusco, Peru.", continent: "South America" },
+        { year: "1450 AD", name: "Kingdom of Kongo", center: {lat: -6.26, lon: 14.24}, validCountry: "Angola", scenario: "A major Christian kingdom in Central Africa.", note: "Mbanza-Kongo, Angola.", continent: "Africa" },
+        { year: "1500 AD", name: "Iroquois Confederacy", center: {lat: 43.04, lon: -76.14}, validCountry: "United States", scenario: "The Great Peacemaker unites the Five Nations.", note: "Onondaga (New York), USA.", continent: "North America" },
+        { year: "1521 AD", name: "Aztec Empire", center: {lat: 19.43, lon: -99.13}, validCountry: "Mexico", scenario: "A city on a lake, besieged by Cortes.", note: "Tenochtitlan, Mexico.", continent: "North America" },
+        { year: "1556 AD", name: "Mughal Empire", center: {lat: 27.17, lon: 78.04}, validCountry: "India", scenario: "Akbar the Great rules a diverse empire.", note: "Agra, India.", continent: "Asia" },
+        { year: "1600 AD", name: "Tokugawa Shogunate", center: {lat: 35.67, lon: 139.65}, validCountry: "Japan", scenario: "The Shogun unifies the warring states.", note: "Edo (Tokyo), Japan.", continent: "Asia" },
+        { year: "1650 AD", name: "Omani Empire", center: {lat: 23.58, lon: 58.40}, validCountry: "Oman", scenario: "A maritime empire spanning the Indian Ocean.", note: "Muscat, Oman.", continent: "Asia" },
+        { year: "1658 AD", name: "Swedish Empire", center: {lat: 59.32, lon: 18.06}, validCountry: "Sweden", scenario: "The Baltic Sea is a Swedish lake.", note: "Stockholm, Sweden.", continent: "Europe" },
+        { year: "1721 AD", name: "Russian Empire", center: {lat: 59.93, lon: 30.33}, validCountry: "Russia", scenario: "Peter the Great builds a window to the west.", note: "St. Petersburg, Russia.", continent: "Europe" },
+        { year: "1791 AD", name: "Haitian Revolution", center: {lat: 19.76, lon: -72.22}, validCountry: "Haiti", scenario: "The only successful slave revolt in history.", note: "Cap-Haitien, Haiti.", continent: "North America" },
+
+        // Era 4: The 19th Century (1800 AD - 1900 AD)
+        { year: "1810 AD", name: "Kingdom of Hawaii", center: {lat: 19.64, lon: -155.99}, validCountry: "United States", scenario: "Kamehameha the Great unites the islands.", note: "Kailua-Kona (Hawaii), USA.", continent: "Oceania" },
+        { year: "1812 AD", name: "Napoleonic Empire", center: {lat: 48.85, lon: 2.35}, validCountry: "France", scenario: "La Grande Armée marches east.", note: "Paris, France.", continent: "Europe" },
+        { year: "1819 AD", name: "Gran Colombia", center: {lat: 4.60, lon: -74.08}, validCountry: "Colombia", scenario: "Simon Bolivar's dream of a united South America.", note: "Bogota, Colombia.", continent: "South America" },
+        { year: "1822 AD", name: "Empire of Brazil", center: {lat: -22.90, lon: -43.17}, validCountry: "Brazil", scenario: "Independence declared from Portugal.", note: "Rio de Janeiro, Brazil.", continent: "South America" },
+        { year: "1868 AD", name: "Meiji Restoration", center: {lat: 35.67, lon: 139.65}, validCountry: "Japan", scenario: "The Emperor is restored to power.", note: "Tokyo, Japan.", continent: "Asia" },
+        { year: "1871 AD", name: "German Empire", center: {lat: 52.52, lon: 13.40}, validCountry: "Germany", scenario: "The Iron Chancellor unifies the states.", note: "Berlin, Germany.", continent: "Europe" },
+        { year: "1880 AD", name: "British Empire", center: {lat: 51.50, lon: -0.12}, validCountry: "United Kingdom", scenario: "The sun never sets on this Queen's reign.", note: "London, UK.", continent: "Europe" },
+        { year: "1896 AD", name: "Ethiopian Empire", center: {lat: 9.03, lon: 38.74}, validCountry: "Ethiopia", scenario: "Defeating a colonial invasion at Adwa.", note: "Addis Ababa, Ethiopia.", continent: "Africa" },
+
+        // Era 5: The 20th Century (1900 AD - 2000 AD)
+        { year: "1900 AD", name: "Qing Dynasty", center: {lat: 39.90, lon: 116.40}, validCountry: "China", scenario: "The Boxer Rebellion siege.", note: "Beijing, China.", continent: "Asia" },
+        { year: "1910 AD", name: "Mexican Revolution", center: {lat: 19.43, lon: -99.13}, validCountry: "Mexico", scenario: "Pancho Villa and Zapata rise up.", note: "Mexico City.", continent: "North America" },
+        { year: "1922 AD", name: "Soviet Union", center: {lat: 55.75, lon: 37.61}, validCountry: "Russia", scenario: "The Hammer and Sickle rises.", note: "Moscow, Russia.", continent: "Europe" },
+        { year: "1947 AD", name: "Partition of India", center: {lat: 28.61, lon: 77.20}, validCountry: "India", scenario: "Independence from the Raj.", note: "New Delhi, India.", continent: "Asia" },
+        { year: "1950 AD", name: "Korean War", center: {lat: 37.56, lon: 126.97}, validCountry: "South Korea", scenario: "Conflict erupts on the peninsula.", note: "Seoul, South Korea.", continent: "Asia" },
+        { year: "1960 AD", name: "Year of Africa", center: {lat: 5.60, lon: -0.18}, validCountry: "Ghana", scenario: "Kwame Nkrumah leads the Pan-African movement.", note: "Accra, Ghana.", continent: "Africa" },
+        { year: "1962 AD", name: "Cuban Missile Crisis", center: {lat: 23.11, lon: -82.36}, validCountry: "Cuba", scenario: "Missiles spotted 90 miles from Florida.", note: "Havana, Cuba.", continent: "North America" },
+        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" },
+        { year: "1989 AD", name: "Fall of Berlin Wall", center: {lat: 52.52, lon: 13.40}, validCountry: "Germany", scenario: "The Iron Curtain cracks.", note: "Berlin, Germany.", continent: "Europe" },
+        { year: "1994 AD", name: "End of Apartheid", center: {lat: -25.74, lon: 28.18}, validCountry: "South Africa", scenario: "Mandela elected President.", note: "Pretoria, South Africa.", continent: "Africa" }
+    ];
+
+    // --- 30 DAILY LEVELS (Random Events) ---
+    let dailyLevels = [
+        { year: "1969 AD", name: "Apollo 11", center: {lat: 29.55, lon: -95.09}, validCountry: "United States", scenario: "'Houston, the Eagle has landed.'", note: "Johnson Space Center, Houston.", continent: "North America" },
+        { year: "1789 AD", name: "French Revolution", center: {lat: 48.85, lon: 2.35}, validCountry: "France", scenario: "The Bastille is stormed.", note: "Paris, France.", continent: "Europe" },
+        { year: "1912 AD", name: "RMS Titanic", center: {lat: 50.90, lon: -1.40}, validCountry: "United Kingdom", scenario: "The ship departs on its maiden voyage.", note: "Southampton, UK.", continent: "Europe" },
+        { year: "1986 AD", name: "Chernobyl Disaster", center: {lat: 51.27, lon: 30.22}, validCountry: "Ukraine", scenario: "Reactor 4 suffers catastrophic failure.", note: "Pripyat, Ukraine.", continent: "Europe" },
+        { year: "79 AD", name: "Eruption of Vesuvius", center: {lat: 40.75, lon: 14.48}, validCountry: "Italy", scenario: "Ash buries the city of Pompeii.", note: "Pompeii, Italy.", continent: "Europe" },
+        { year: "1215 AD", name: "Magna Carta", center: {lat: 51.44, lon: -0.56}, validCountry: "United Kingdom", scenario: "King John signs the charter of liberties.", note: "Runnymede, UK.", continent: "Europe" },
+        { year: "1453 AD", name: "Fall of Constantinople", center: {lat: 41.00, lon: 28.97}, validCountry: "Turkey", scenario: "The end of the Medieval period.", note: "Istanbul, Turkey.", continent: "Asia" },
+        { year: "1903 AD", name: "First Flight", center: {lat: 36.01, lon: -75.66}, validCountry: "United States", scenario: "The Wright brothers take to the skies.", note: "Kitty Hawk, NC, USA.", continent: "North America" },
+        { year: "1815 AD", name: "Battle of Waterloo", center: {lat: 50.68, lon: 4.41}, validCountry: "Belgium", scenario: "Napoleon's final defeat.", note: "Waterloo, Belgium.", continent: "Europe" },
+        { year: "1963 AD", name: "JFK Assassination", center: {lat: 32.77, lon: -96.79}, validCountry: "United States", scenario: "A motorcade in Dealey Plaza.", note: "Dallas, USA.", continent: "North America" },
+        { year: "1994 AD", name: "End of Apartheid", center: {lat: -25.74, lon: 28.18}, validCountry: "South Africa", scenario: "Mandela elected President.", note: "Pretoria, South Africa.", continent: "Africa" },
+        { year: "1883 AD", name: "Krakatoa Eruption", center: {lat: -6.10, lon: 105.42}, validCountry: "Indonesia", scenario: "The loudest sound in recorded history.", note: "Krakatoa, Indonesia.", continent: "Asia" },
+        { year: "1953 AD", name: "Mt Everest Summit", center: {lat: 27.98, lon: 86.92}, validCountry: "Nepal", scenario: "Hillary and Norgay reach the roof of the world.", note: "Himalayas, Nepal.", continent: "Asia" },
+        { year: "1517 AD", name: "The Reformation", center: {lat: 51.86, lon: 12.64}, validCountry: "Germany", scenario: "95 Theses nailed to a church door.", note: "Wittenberg, Germany.", continent: "Europe" },
+        { year: "1914 AD", name: "Archduke Assassination", center: {lat: 43.85, lon: 18.41}, validCountry: "Bosnia and Herzegovina", scenario: "The spark that started World War I.", note: "Sarajevo, Bosnia.", continent: "Europe" },
+        { year: "1944 AD", name: "D-Day", center: {lat: 49.33, lon: -0.60}, validCountry: "France", scenario: "Allied forces storm Omaha Beach.", note: "Normandy, France.", continent: "Europe" },
+        { year: "1967 AD", name: "Six-Day War", center: {lat: 31.76, lon: 35.21}, validCountry: "Israel", scenario: "Conflict reshapes the Middle East map.", note: "Jerusalem, Israel.", continent: "Asia" },
+        { year: "1848 AD", name: "California Gold Rush", center: {lat: 38.58, lon: -121.49}, validCountry: "United States", scenario: "Sutter's Mill sparks a migration.", note: "Sacramento, USA.", continent: "North America" },
+        { year: "1957 AD", name: "Sputnik 1", center: {lat: 45.92, lon: 63.34}, validCountry: "Kazakhstan", scenario: "The Space Age begins.", note: "Baikonur Cosmodrome, Kazakhstan.", continent: "Asia" },
+        { year: "1980 AD", name: "Solidarity Movement", center: {lat: 54.35, lon: 18.64}, validCountry: "Poland", scenario: "Strike at the Lenin Shipyard.", note: "Gdansk, Poland.", continent: "Europe" },
+        { year: "1805 AD", name: "Battle of Trafalgar", center: {lat: 36.18, lon: -6.03}, validCountry: "Spain", scenario: "Nelson defeats the combined fleet.", note: "Cape Trafalgar, Spain.", continent: "Europe" },
+        { year: "1776 AD", name: "Declaration of Independence", center: {lat: 39.95, lon: -75.16}, validCountry: "United States", scenario: "A new nation breaks from the Crown.", note: "Philadelphia, USA.", continent: "North America" },
+        { year: "1911 AD", name: "Machu Picchu Discovered", center: {lat: -13.16, lon: -72.54}, validCountry: "Peru", scenario: "Bingham reveals the Lost City.", note: "Andes Mountains, Peru.", continent: "South America" },
+        { year: "1099 AD", name: "First Crusade", center: {lat: 31.76, lon: 35.21}, validCountry: "Israel", scenario: "The siege of the Holy City.", note: "Jerusalem, Israel.", continent: "Asia" },
+        { year: "1869 AD", name: "Suez Canal Opens", center: {lat: 30.58, lon: 32.27}, validCountry: "Egypt", scenario: "Connecting the Mediterranean and Red Sea.", note: "Suez, Egypt.", continent: "Africa" },
+        { year: "1997 AD", name: "Handover of Hong Kong", center: {lat: 22.31, lon: 114.16}, validCountry: "China", scenario: "The end of the British Empire in Asia.", note: "Hong Kong, China.", continent: "Asia" },
+        { year: "1929 AD", name: "Wall Street Crash", center: {lat: 40.71, lon: -74.00}, validCountry: "United States", scenario: "Black Tuesday triggers the Great Depression.", note: "New York City, USA.", continent: "North America" },
+        { year: "1901 AD", name: "First Nobel Prizes", center: {lat: 59.32, lon: 18.06}, validCountry: "Sweden", scenario: "Awards established by the inventor of dynamite.", note: "Stockholm, Sweden.", continent: "Europe" },
+        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" }
+    ];
+
+    // --- STORY TRANSMISSION DATA ---
+    const storyBeats = {
+        0: {
+            title: "SYSTEM INITIALIZATION",
+            msg: "Agent, welcome to the Temporle Project. <br><br>An anomaly identified as <strong>'Subject Zero'</strong> is moving forward through time, erasing history as they go. <br><br>Your mission: Locate the Center of Power in each era to lock the timeline in place. Good luck.",
+            sender: "COMMAND"
+        },
+        10: {
+            title: "ANOMALY DETECTED",
+            msg: "You're doing well, but Subject Zero knows you are tracking them. <br><br>We are detecting increased instability in the Classical Era. The timeline is fracturing. Stay sharp.",
+            sender: "COMMAND"
+        },
+        20: {
+            title: "INCOMING MESSAGE",
+            msg: "Why do you persist? History is a burden. I am simply... lightening the load. <br><br>Let the past die.",
+            sender: "SUBJECT ZERO"
+        },
+        35: {
+            title: "CRITICAL WARNING",
+            msg: "Subject Zero has accelerated. They are moving into the Industrial Age. <br><br>If they reach the Modern Era before you stabilize the timeline, we lose everything.",
+            sender: "COMMAND"
+        },
+        49: {
+            title: "FINAL CONFRONTATION",
+            msg: "I see you. You're at the end of the line. <br><br>One last era. One last chance to save your precious 'reality'. Let's see if you know your own world.",
+            sender: "SUBJECT ZERO"
+        }
+    };
+
+    // UTILS
+    function parseYear(yStr) { let y = parseInt(yStr); return yStr.includes("BC") ? -y : y; }
+    storyLevels.sort((a,b) => parseYear(a.year) - parseYear(b.year));
+
+    // GAME STATE
+    let currentMode = null; 
+    let currentLevelIdx = 0;
+    let currentLevelList = [];
+    let health = 100;
+    let gameOver = false;
+
+    // PRNG for Daily Seed
+    function mulberry32(a) {
+        return function() {
+            var t = a += 0x6D2B79F5;
+            t = Math.imul(t ^ t >>> 15, t | 1);
+            t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        }
+    }
+
+    function initMode(mode) {
+        currentMode = mode;
+        document.getElementById('mainMenu').style.display = 'none';
+        
+        if (mode === 'daily') {
+            document.getElementById('modeLabel').innerText = "DAILY PARADOX";
+            startDaily();
+        } else {
+            document.getElementById('modeLabel').innerText = "TIME STREAM";
+            startStory();
+        }
+    }
+
+    function startStory() {
+        currentLevelList = storyLevels;
+        currentLevelIdx = 0;
+        health = 100;
+        gameOver = false;
+        
+        // Show intro story check
+        if (storyBeats[0]) {
+            showStory(0);
+        } else {
+            loadLevel(0);
+        }
+    }
+
+    function startDaily() {
+        currentLevelList = dailyLevels;
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // Check if played
+        const savedResult = localStorage.getItem('temporle_daily_' + today);
+        if (savedResult) {
+            document.getElementById('yearVal').innerText = "LOCKED";
+            document.getElementById('scenarioText').innerText = "Daily Paradox already attempted.";
+            gameOver = true;
+            document.getElementById('countryInput').disabled = true;
+            if(savedResult === 'win') {
+                document.getElementById('winModal').style.display = 'flex';
+                document.getElementById('winMsg').innerText = "Daily Complete";
+                document.getElementById('dailyCompleteUI').classList.remove('hidden');
+                document.getElementById('nextLvlBtn').classList.add('hidden');
+                startTimer();
+            } else {
+                document.getElementById('loseModal').style.display = 'flex';
+                document.getElementById('dailyFailUI').classList.remove('hidden');
+                document.getElementById('retryBtn').classList.add('hidden');
+            }
+            return;
+        }
+
+        let seed = 0;
+        for (let i = 0; i < today.length; i++) seed = seed + today.charCodeAt(i);
+        const rand = mulberry32(seed);
+        
+        currentLevelIdx = Math.floor(rand() * dailyLevels.length);
+        health = 100;
+        gameOver = false;
+        loadLevel(currentLevelIdx);
+    }
+
+    function loadLevel(idx) {
+        currentLevelIdx = idx;
+        
+        document.getElementById('winModal').style.display = 'none';
+        document.getElementById('loseModal').style.display = 'none';
+        document.getElementById('endGameModal').style.display = 'none';
+
+        const level = currentLevelList[idx];
+        updateBackground(level.year);
+        updateHealthUI();
+        
+        document.getElementById('yearVal').innerText = level.year;
+        document.getElementById('scenarioText').innerText = level.scenario;
+        document.getElementById('hintText').classList.add('hidden');
+        document.getElementById('logList').innerHTML = '';
+        document.getElementById('radarReadout').innerText = "Standby";
+        
+        const counter = document.getElementById('levelCountDisplay');
+        if (counter) {
+            counter.innerText = (currentMode === 'story') ? `Level ${idx + 1} / ${currentLevelList.length}` : "Daily Event";
+        }
+        
+        document.getElementById('countryInput').value = '';
+        document.getElementById('countryInput').disabled = false;
+        document.getElementById('btnAbility1').disabled = false;
+        document.getElementById('btnAbility2').disabled = false;
+        document.querySelectorAll('.blip').forEach(b => b.remove());
+    }
+
+    function updateBackground(yearStr) {
+        const y = parseYear(yearStr);
+        let bg = "";
+        
+        if (y < 0) { // Ancient
+            bg = "linear-gradient(135deg, #fdfbfb 0%, #e2d1c3 100%)";
+            document.body.style.setProperty('--primary', '#d97706');
+        } else if (y < 1500) { // Medieval
+            bg = "linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)";
+            document.body.style.setProperty('--primary', '#4f46e5');
+        } else if (y < 1900) { // Industrial
+            bg = "linear-gradient(135deg, #f3f4f6 0%, #9ca3af 100%)";
+            document.body.style.setProperty('--primary', '#374151');
+        } else { // Modern
+            bg = "linear-gradient(135deg, #ecfeff 0%, #a5f3fc 100%)";
+            document.body.style.setProperty('--primary', '#0891b2');
+        }
+        document.body.style.background = bg;
+    }
+
+    // STORY MODAL LOGIC
+    function showStory(idx) {
+        const beat = storyBeats[idx];
+        document.getElementById('storySender').innerText = beat.sender;
+        document.getElementById('storyTitle').innerText = beat.title;
+        document.getElementById('storyMsg').innerHTML = beat.msg;
+        
+        if (beat.sender !== "COMMAND") {
+            document.getElementById('storySender').style.color = "var(--danger)";
+            document.querySelector('#storyModal .modal').style.borderColor = "var(--danger)";
+        } else {
+            document.getElementById('storySender').style.color = "var(--primary)";
+            document.querySelector('#storyModal .modal').style.borderColor = "var(--primary)";
+        }
+
+        document.getElementById('storyModal').style.display = 'flex';
+    }
+
+    function closeStory() {
+        document.getElementById('storyModal').style.display = 'none';
+        loadLevel(currentLevelIdx);
+    }
+
+    function useAbility(type) {
+        if (gameOver) return;
+        const cost = type === 'continent' ? 15 : 10;
+        if (health <= cost) { sfx.err(); return; }
+
+        sfx.click();
+        health -= cost;
+        updateHealthUI();
+        
+        const level = currentLevelList[currentLevelIdx];
+        const hintBox = document.getElementById('hintText');
+        hintBox.classList.remove('hidden');
+
+        if (type === 'continent') {
+            hintBox.innerHTML = `<span>📍 Target region: ${level.continent}</span>`;
+            document.getElementById('btnAbility1').disabled = true;
+        } else if (type === 'letter') {
+            hintBox.innerHTML += `<span>🔤 Starts with '${level.validCountry.charAt(0)}'</span>`;
+            document.getElementById('btnAbility2').disabled = true;
+        }
+    }
+
+    function handleGuess() {
+        if (gameOver) return;
+        const input = document.getElementById('countryInput');
+        const val = input.value.trim();
+        const country = countries.find(c => c.name.toLowerCase() === val.toLowerCase());
+
+        if (!country) {
+            sfx.err();
+            input.style.borderColor = "var(--danger)";
+            setTimeout(() => input.style.borderColor = "transparent", 400);
+            return;
+        }
+
+        sfx.scan();
+        input.value = '';
+        document.getElementById('suggestions').style.display = 'none';
+
+        const target = currentLevelList[currentLevelIdx].center;
+        
+        let win = false;
+        let dist = getDistance(country.lat, country.lon, target.lat, target.lon);
+        
+        if (country.name.toLowerCase() === currentLevelList[currentLevelIdx].validCountry.toLowerCase()) {
+            win = true;
+            dist = 0;
+        }
+        
+        const bearingForRadar = getBearing(target.lat, target.lon, country.lat, country.lon);
+        const bearingForText = getBearing(country.lat, country.lon, target.lat, target.lon);
+
+        let damage = 0;
+        if (!win) {
+            if (dist > 10000) damage = 15;
+            else if (dist > 5000) damage = 10;
+            else if (dist > 2000) damage = 5;
+            health -= damage;
+            if (health <= 0) { health = 0; triggerLoss(); }
+        }
+        updateHealthUI();
+
+        addLogEntry(country.name, Math.round(dist), win);
+        addRadarBlip(dist, bearingForRadar, win);
+        updateRadarReadout(bearingForText, dist);
+
+        if (win && health > 0) triggerWin();
+    }
+
+    function triggerWin() {
+        sfx.win();
+        const today = new Date().toISOString().slice(0, 10);
+        
+        if (currentMode === 'story') {
+            health += 15; 
+            if (health > 100) health = 100;
+            updateHealthUI();
+            
+            document.getElementById('winMsg').innerText = currentLevelList[currentLevelIdx].name;
+            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
+            document.getElementById('winModal').style.display = 'flex';
+            document.getElementById('nextLvlBtn').classList.remove('hidden');
+            document.getElementById('dailyCompleteUI').classList.add('hidden');
+        } else {
+            localStorage.setItem('temporle_daily_' + today, 'win');
+            document.getElementById('winMsg').innerText = "Daily Paradox Resolved";
+            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
+            document.getElementById('winModal').style.display = 'flex';
+            document.getElementById('nextLvlBtn').classList.add('hidden');
+            document.getElementById('dailyCompleteUI').classList.remove('hidden');
+            startTimer();
+        }
+    }
+
+    function triggerLoss() {
+        gameOver = true;
+        sfx.err();
+        const today = new Date().toISOString().slice(0, 10);
+        
+        if (currentMode === 'daily') {
+            localStorage.setItem('temporle_daily_' + today, 'lose');
+            document.getElementById('dailyFailUI').classList.remove('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+        } else {
+            document.getElementById('dailyFailUI').classList.add('hidden');
+            document.getElementById('retryBtn').classList.remove('hidden');
+        }
+        document.getElementById('loseModal').style.display = 'flex';
+    }
+
+    function nextLevel() {
+        if (currentLevelIdx + 1 >= currentLevelList.length) {
+            document.getElementById('winModal').style.display = 'none';
+            document.getElementById('endGameModal').style.display = 'flex';
+        } else {
+            // Increment logic for Story Mode
+            let nextIdx = currentLevelIdx + 1;
+            
+            // Check for story beat BEFORE loading level
+            if (currentMode === 'story' && storyBeats[nextIdx]) {
+                document.getElementById('winModal').style.display = 'none';
+                currentLevelIdx = nextIdx; // Update index so closeStory loads correct level
+                showStory(nextIdx);
+            } else {
+                loadLevel(nextIdx);
+            }
+        }
+    }
+
+    function updateHealthUI() {
+        const bar = document.getElementById('healthBar');
+        bar.style.width = health + "%";
+        document.getElementById('healthText').innerText = health + "%";
+        if (health < 30) bar.classList.add('danger');
+        else bar.classList.remove('danger');
+    }
+
+    function addLogEntry(name, dist, win) {
+        const div = document.createElement('div');
+        div.className = 'log-card';
+        if (dist < 800 && !win) div.classList.add('close');
+        
+        let distText = `${dist} km`;
+        if (win) distText = "TARGET FOUND";
+        else if (dist < 800) distText = "CLOSE - CHECK BORDERS";
+        
+        div.innerHTML = `<span class="log-name">${name}</span><span class="log-dist">${distText}</span>`;
+        document.getElementById('logList').prepend(div);
+    }
+
+    function addRadarBlip(dist, bearing, win) {
+        const radar = document.getElementById('radarScreen');
+        const blip = document.createElement('div');
+        blip.className = 'blip';
+        let r = (dist / 15000) * 50; if (r > 48) r = 48;
+        if(win) blip.style.background = "var(--success)";
+        else if(dist < 800) blip.style.background = "var(--accent)";
+        else if(dist < 2500) blip.style.background = "#fcd34d";
+        else blip.style.background = "var(--text-main)";
+        const rad = (bearing - 90) * (Math.PI / 180); 
+        const x = r * Math.cos(rad); const y = r * Math.sin(rad);
+        blip.style.left = `calc(50% + ${x}%)`; blip.style.top = `calc(50% + ${y}%)`;
+        radar.appendChild(blip);
+    }
+
+    function updateRadarReadout(bearing, dist) {
+        const directions = ["North", "NE", "East", "SE", "South", "SW", "West", "NW"];
+        const index = Math.round(((bearing %= 360) < 0 ? bearing + 360 : bearing) / 45) % 8;
+        let text = `Target is ${directions[index]}`;
+        if (dist < 2000) text += " (Close!)";
+        document.getElementById('radarReadout').innerText = text;
+    }
+
+    function startTimer() {
+        setInterval(() => {
+            const now = new Date();
+            const tomorrow = new Date(now);
+            tomorrow.setHours(24, 0, 0, 0);
+            const diff = tomorrow - now;
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('countdown').innerText = `${h}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        }, 1000);
+    }
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+    function getBearing(lat1, lon1, lat2, lon2) {
+        const y = Math.sin((lon2 - lon1) * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180);
+        const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) - Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos((lon2 - lon1) * Math.PI / 180);
+        return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    }
+
+    const input = document.getElementById("countryInput");
+    const box = document.getElementById("suggestions");
+    input.addEventListener("input", function() {
+        const val = this.value.toLowerCase(); box.innerHTML = "";
+        if (!val) { box.style.display = "none"; return; }
+        const matches = countries.filter(c => c.name.toLowerCase().startsWith(val)).slice(0, 5);
+        if (matches.length > 0) {
+            box.style.display = "block";
+            matches.forEach(m => {
+                const div = document.createElement("div"); div.className = "s-item"; div.innerText = m.name;
+                div.onclick = () => { input.value = m.name; box.style.display = "none"; input.focus(); };
+                box.appendChild(div);
+            });
+        } else { box.style.display = "none"; }
+    });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter") { if (box.style.display === "block" && box.firstChild) input.value = box.firstChild.innerText; handleGuess(); } });
+    document.addEventListener('click', (e) => { if (e.target !== input) box.style.display = 'none'; });
+</script>
+</body>
+</html>
