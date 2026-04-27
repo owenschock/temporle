@@ -167,9 +167,50 @@
         @keyframes popUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .hidden { display: none !important; }
 
+        /* STATS DASHBOARD */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 25px; }
+        .stat-box { display: flex; flex-direction: column; align-items: center; background: #f9fafb; border: 1px solid var(--border); padding: 15px 5px; border-radius: 12px; }
+        .stat-num { font-size: 1.6rem; font-weight: 800; color: var(--text-main); }
+        .stat-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 800; color: var(--text-muted); text-align: center; margin-top: 5px; }
+        
+        .dist-container { display: flex; flex-direction: column; gap: 8px; text-align: left; margin-bottom: 20px; }
+        .dist-row { display: flex; align-items: center; gap: 10px; font-size: 0.95rem; font-weight: 700; color: var(--text-muted); }
+        .dist-bar-wrapper { flex: 1; background: #f3f4f6; height: 26px; border-radius: 6px; overflow: hidden; display: flex; }
+        .dist-bar-fill { height: 100%; background: var(--text-muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: white; font-size: 0.8rem; min-width: 8%; transition: width 0.5s ease; }
+        .dist-bar-fill.highlight { background: var(--success); }
+
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.1); border-radius: 4px; }
+
+        /* TOAST NOTIFICATION */
+        #toast {
+            visibility: hidden; min-width: 200px; background-color: var(--text-main); color: #fff;
+            text-align: center; border-radius: 12px; padding: 16px; position: fixed;
+            z-index: 1000; left: 50%; transform: translateX(-50%); bottom: 30px;
+            font-weight: 700; box-shadow: 0px 10px 30px rgba(0,0,0,0.2); font-size: 1rem;
+        }
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.3s, fadeout 0.3s 2.5s;
+        }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
+
+        /* DEBRIEF BOX */
+        .debrief-box {
+            background: rgba(79, 70, 229, 0.05);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+        .debrief-title { font-weight: 800; color: var(--primary); text-transform: uppercase; font-size: 0.75rem; margin-bottom: 5px; }
+        .debrief-text { color: var(--text-main); font-size: 0.9rem; font-weight: 500; margin-bottom: 12px; line-height: 1.4; }
+        .wiki-link { display: inline-block; color: white; background: var(--primary); padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
+        .wiki-link:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
     </style>
 </head>
 <body>
@@ -201,7 +242,10 @@
     </div>
 
     <header>
-        <div class="brand" onclick="location.reload()">Temporle</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="brand" onclick="location.reload()">Temporle</div>
+            <div style="cursor: pointer; font-size: 1.5rem; transition: transform 0.2s;" onclick="showStats()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">📊</div>
+        </div>
         <div id="yearDisplay" class="timeline-pill">
             <span id="yearVal">----</span>
         </div>
@@ -252,6 +296,7 @@
             </div>
         </div>
     </div>
+    <div id="toast">Copied to clipboard! 📋</div>
 </div>
 
 <div id="winModal" class="overlay">
@@ -266,6 +311,11 @@
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Next Paradox In</div>
                 <div id="countdown" style="font-size: 2rem; font-weight: 800; color: var(--text-main);">00:00:00</div>
             </div>
+
+            <div id="winDebrief" class="debrief-box hidden"></div>
+
+            <button class="btn-modal" style="background: var(--success); margin-top: 15px;" onclick="shareResult()">Share Result 📋</button>
+            <button class="btn-modal" style="background: var(--primary); margin-top: 10px;" onclick="showStats()">View Stats</button>
             <button class="btn-modal" style="background: var(--text-main); margin-top: 10px;" onclick="location.reload()">Main Menu</button>
         </div>
     </div>
@@ -278,6 +328,11 @@
         <p>Integrity failure. Paradox detected.</p>
         <div id="dailyFailUI" class="hidden" style="margin-top: 20px;">
              <div style="color: var(--danger); font-weight:700; margin-bottom: 15px;">Daily Attempt Failed</div>
+             
+             <div id="loseDebrief" class="debrief-box hidden"></div>
+        
+             <button class="btn-modal" style="background: var(--accent); margin-bottom: 10px;" onclick="shareResult()">Share Result 📋</button>
+             <button class="btn-modal" style="background: var(--primary); margin-bottom: 10px;" onclick="showStats()">View Stats</button>
              <button class="btn-modal" style="background: var(--text-main);" onclick="location.reload()">Main Menu</button>
         </div>
         <button id="retryBtn" class="btn-modal" style="background: var(--text-main);" onclick="location.reload()">Reboot</button>
@@ -290,6 +345,25 @@
         <h2>Mission Complete</h2>
         <p>You have successfully navigated the Time Stream.</p>
         <button class="btn-modal" onclick="location.reload()">Return to Base</button>
+    </div>
+</div>
+
+<div id="statsModal" class="overlay" style="z-index: 300;">
+    <div class="modal">
+        <h2 style="margin-bottom: 20px; color: var(--text-main);">Daily Statistics</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-box"><span id="statPlayed" class="stat-num">0</span><span class="stat-label">Played</span></div>
+            <div class="stat-box"><span id="statWinPct" class="stat-num">0</span><span class="stat-label">Win %</span></div>
+            <div class="stat-box"><span id="statStreak" class="stat-num">0</span><span class="stat-label">Current<br>Streak</span></div>
+            <div class="stat-box"><span id="statMax" class="stat-num">0</span><span class="stat-label">Max<br>Streak</span></div>
+        </div>
+
+        <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 10px;">Guess Distribution</div>
+        <div id="distChart" class="dist-container">
+            </div>
+
+        <button class="btn-modal" onclick="document.getElementById('statsModal').style.display='none'">Close</button>
     </div>
 </div>
 
@@ -433,9 +507,7 @@
     ];
 
     // --- 30 DAILY LEVELS (Random Events) ---
-    // --- 130 DAILY LEVELS (Random Events) ---
     let dailyLevels = [
-        // Original 30
         { year: "1969 AD", name: "Apollo 11", center: {lat: 29.55, lon: -95.09}, validCountry: "United States", scenario: "'Houston, the Eagle has landed.'", note: "Johnson Space Center, Houston.", continent: "North America" },
         { year: "1789 AD", name: "French Revolution", center: {lat: 48.85, lon: 2.35}, validCountry: "France", scenario: "The Bastille is stormed.", note: "Paris, France.", continent: "Europe" },
         { year: "1912 AD", name: "RMS Titanic", center: {lat: 50.90, lon: -1.40}, validCountry: "United Kingdom", scenario: "The ship departs on its maiden voyage.", note: "Southampton, UK.", continent: "Europe" },
@@ -464,116 +536,9 @@
         { year: "1997 AD", name: "Handover of Hong Kong", center: {lat: 22.31, lon: 114.16}, validCountry: "China", scenario: "The end of the British Empire in Asia.", note: "Hong Kong, China.", continent: "Asia" },
         { year: "1929 AD", name: "Wall Street Crash", center: {lat: 40.71, lon: -74.00}, validCountry: "United States", scenario: "Black Tuesday triggers the Great Depression.", note: "New York City, USA.", continent: "North America" },
         { year: "1901 AD", name: "First Nobel Prizes", center: {lat: 59.32, lon: 18.06}, validCountry: "Sweden", scenario: "Awards established by the inventor of dynamite.", note: "Stockholm, Sweden.", continent: "Europe" },
-        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" },
-
-        // South & Central America
-        { year: "100 BC", name: "Nazca Lines", center: {lat: -14.73, lon: -75.13}, validCountry: "Peru", scenario: "Massive geoglyphs are carved into the desert floor.", note: "Nazca Desert, Peru.", continent: "South America" },
-        { year: "600 AD", name: "Tiwanaku Empire", center: {lat: -16.55, lon: -68.67}, validCountry: "Bolivia", scenario: "A high-altitude civilization dominates the Andes.", note: "Lake Titicaca, Bolivia.", continent: "South America" },
-        { year: "1532 AD", name: "Muisca Confederation", center: {lat: 4.60, lon: -74.08}, validCountry: "Colombia", scenario: "The legend of El Dorado originates here.", note: "Bogota, Colombia.", continent: "South America" },
-        { year: "1550 AD", name: "Mapuche Resistance", center: {lat: -38.73, lon: -72.59}, validCountry: "Chile", scenario: "Indigenous forces successfully repel European invaders.", note: "Araucania, Chile.", continent: "South America" },
-        { year: "1824 AD", name: "Battle of Ayacucho", center: {lat: -13.16, lon: -74.22}, validCountry: "Peru", scenario: "The decisive battle for South American independence.", note: "Ayacucho, Peru.", continent: "South America" },
-        { year: "1914 AD", name: "Panama Canal Opens", center: {lat: 9.14, lon: -79.72}, validCountry: "Panama", scenario: "The Atlantic and Pacific oceans are finally connected.", note: "Panama Canal.", continent: "North America" },
-        { year: "1982 AD", name: "Falklands War", center: {lat: -51.69, lon: -57.85}, validCountry: "Argentina", scenario: "A territorial conflict over South Atlantic islands.", note: "Falkland Islands/Malvinas.", continent: "South America" },
-        { year: "1536 AD", name: "Founding of Buenos Aires", center: {lat: -34.60, lon: -58.38}, validCountry: "Argentina", scenario: "Spanish colonizers establish a port on the Rio de la Plata.", note: "Buenos Aires, Argentina.", continent: "South America" },
-        { year: "1889 AD", name: "Republic of Brazil", center: {lat: -15.79, lon: -47.88}, validCountry: "Brazil", scenario: "The monarchy is overthrown by a military coup.", note: "Rio de Janeiro, Brazil.", continent: "South America" },
-        { year: "1960 AD", name: "Brasília Inaugurated", center: {lat: -15.79, lon: -47.86}, validCountry: "Brazil", scenario: "A modernist capital city is built from scratch.", note: "Brasília, Brazil.", continent: "South America" },
-
-        // Africa
-        { year: "1492 AD", name: "Songhai Empire", center: {lat: 16.27, lon: -0.05}, validCountry: "Mali", scenario: "Askia the Great expands the empire to its zenith.", note: "Gao, Mali.", continent: "Africa" },
-        { year: "1700 AD", name: "Ashanti Empire", center: {lat: 6.68, lon: -1.62}, validCountry: "Ghana", scenario: "The Golden Stool unites a powerful West African state.", note: "Kumasi, Ghana.", continent: "Africa" },
-        { year: "1879 AD", name: "Battle of Isandlwana", center: {lat: -28.35, lon: 30.65}, validCountry: "South Africa", scenario: "Zulu warriors defeat the British army.", note: "KwaZulu-Natal, South Africa.", continent: "Africa" },
-        { year: "200 BC", name: "Kingdom of Kush", center: {lat: 16.93, lon: 33.74}, validCountry: "Sudan", scenario: "The Black Pharaohs rule from their desert pyramids.", note: "Meroë, Sudan.", continent: "Africa" },
-        { year: "1800 AD", name: "Dahomey Amazons", center: {lat: 7.18, lon: 1.99}, validCountry: "Benin", scenario: "An all-female military regiment defends the kingdom.", note: "Abomey, Benin.", continent: "Africa" },
-        { year: "1300 AD", name: "Kilwa Sultanate", center: {lat: -8.95, lon: 39.50}, validCountry: "Tanzania", scenario: "A wealthy Swahili city-state dominates Indian Ocean trade.", note: "Kilwa Kisiwani, Tanzania.", continent: "Africa" },
-        { year: "1652 AD", name: "Cape Colony Founded", center: {lat: -33.92, lon: 18.42}, validCountry: "South Africa", scenario: "The Dutch East India Company establishes a supply station.", note: "Cape Town, South Africa.", continent: "Africa" },
-        { year: "1956 AD", name: "Suez Crisis", center: {lat: 30.58, lon: 32.27}, validCountry: "Egypt", scenario: "An international dispute over a vital canal.", note: "Suez, Egypt.", continent: "Africa" },
-        { year: "1994 AD", name: "Rwandan Tragedy", center: {lat: -1.94, lon: 29.87}, validCountry: "Rwanda", scenario: "A nation falls into horrific sectarian violence.", note: "Kigali, Rwanda.", continent: "Africa" },
-        { year: "1898 AD", name: "Fashoda Incident", center: {lat: 9.88, lon: 32.05}, validCountry: "South Sudan", scenario: "British and French colonial empires clash.", note: "Kodok, South Sudan.", continent: "Africa" },
-
-        // Middle East & Central Asia
-        { year: "3000 BC", name: "Elamite Empire", center: {lat: 32.03, lon: 48.29}, validCountry: "Iran", scenario: "One of the earliest civilizations arises east of Sumer.", note: "Susa, Iran.", continent: "Asia" },
-        { year: "250 BC", name: "Nabataean Kingdom", center: {lat: 30.32, lon: 35.44}, validCountry: "Jordan", scenario: "A desert capital carved directly into rose-red cliffs.", note: "Petra, Jordan.", continent: "Asia" },
-        { year: "224 AD", name: "Sassanid Empire", center: {lat: 33.09, lon: 44.58}, validCountry: "Iraq", scenario: "The last pre-Islamic Persian empire builds its capital.", note: "Ctesiphon, Iraq.", continent: "Asia" },
-        { year: "1037 AD", name: "Seljuk Empire", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "Turkic nomads establish a vast empire.", note: "Rayy/Tehran, Iran.", continent: "Asia" },
-        { year: "1501 AD", name: "Safavid Dynasty", center: {lat: 38.07, lon: 46.29}, validCountry: "Iran", scenario: "Shia Islam is established as the state religion.", note: "Tabriz, Iran.", continent: "Asia" },
-        { year: "1979 AD", name: "Soviet-Afghan War", center: {lat: 34.52, lon: 69.17}, validCountry: "Afghanistan", scenario: "A superpower invades the Graveyard of Empires.", note: "Kabul, Afghanistan.", continent: "Asia" },
-        { year: "1948 AD", name: "Creation of Israel", center: {lat: 32.08, lon: 34.78}, validCountry: "Israel", scenario: "David Ben-Gurion declares a new state.", note: "Tel Aviv, Israel.", continent: "Asia" },
-        { year: "1990 AD", name: "Gulf War Begins", center: {lat: 29.37, lon: 47.97}, validCountry: "Kuwait", scenario: "Iraqi forces cross the southern border.", note: "Kuwait City, Kuwait.", continent: "Asia" },
-        { year: "1923 AD", name: "Republic of Turkey", center: {lat: 39.92, lon: 32.85}, validCountry: "Turkey", scenario: "Atatürk establishes a modern secular state.", note: "Ankara, Turkey.", continent: "Asia" },
-        { year: "1398 AD", name: "Sack of Delhi", center: {lat: 28.61, lon: 77.20}, validCountry: "India", scenario: "Timur invades the Delhi Sultanate.", note: "Delhi, India.", continent: "Asia" },
-
-        // South & Southeast Asia
-        { year: "1025 AD", name: "Chola Dynasty", center: {lat: 10.79, lon: 79.13}, validCountry: "India", scenario: "A southern Indian empire launches a naval invasion.", note: "Thanjavur, India.", continent: "Asia" },
-        { year: "320 AD", name: "Gupta Empire", center: {lat: 25.59, lon: 85.13}, validCountry: "India", scenario: "The Golden Age of Indian science and mathematics.", note: "Pataliputra, India.", continent: "Asia" },
-        { year: "1674 AD", name: "Maratha Empire", center: {lat: 18.52, lon: 73.85}, validCountry: "India", scenario: "Shivaji establishes a Hindu warrior state.", note: "Pune, India.", continent: "Asia" },
-        { year: "700 AD", name: "Srivijaya Empire", center: {lat: -2.99, lon: 104.75}, validCountry: "Indonesia", scenario: "A maritime empire controls the Strait of Malacca.", note: "Palembang, Indonesia.", continent: "Asia" },
-        { year: "1350 AD", name: "Ayutthaya Kingdom", center: {lat: 14.35, lon: 100.56}, validCountry: "Thailand", scenario: "A powerful Siamese kingdom flourishes.", note: "Ayutthaya, Thailand.", continent: "Asia" },
-        { year: "1550 AD", name: "Toungoo Dynasty", center: {lat: 18.93, lon: 96.43}, validCountry: "Myanmar", scenario: "The largest empire in Southeast Asian history.", note: "Bago, Myanmar.", continent: "Asia" },
-        { year: "1000 AD", name: "Champa Kingdom", center: {lat: 15.87, lon: 108.33}, validCountry: "Vietnam", scenario: "An ancient maritime culture builds Hindu temples.", note: "My Son, Vietnam.", continent: "Asia" },
-        { year: "1947 AD", name: "Partition of India", center: {lat: 31.52, lon: 74.35}, validCountry: "Pakistan", scenario: "Mass migration follows the end of British rule.", note: "Lahore, Pakistan.", continent: "Asia" },
-        { year: "1971 AD", name: "Bangladesh Liberation", center: {lat: 23.81, lon: 90.41}, validCountry: "Bangladesh", scenario: "East Pakistan fights for independence.", note: "Dhaka, Bangladesh.", continent: "Asia" },
-        { year: "1565 AD", name: "Spanish Philippines", center: {lat: 10.31, lon: 123.89}, validCountry: "Philippines", scenario: "The first Spanish settlement in the archipelago.", note: "Cebu, Philippines.", continent: "Asia" },
-
-        // East Asia
-        { year: "221 BC", name: "Qin Dynasty", center: {lat: 34.26, lon: 108.93}, validCountry: "China", scenario: "The first Emperor unifies the warring states.", note: "Xi'an, China.", continent: "Asia" },
-        { year: "400 AD", name: "Goguryeo Kingdom", center: {lat: 39.03, lon: 125.75}, validCountry: "North Korea", scenario: "A powerful ancient Korean kingdom peaks.", note: "Pyongyang, North Korea.", continent: "Asia" },
-        { year: "794 AD", name: "Heian Period", center: {lat: 35.01, lon: 135.76}, validCountry: "Japan", scenario: "A golden age of Japanese art and literature begins.", note: "Kyoto, Japan.", continent: "Asia" },
-        { year: "1368 AD", name: "Ming Dynasty", center: {lat: 32.06, lon: 118.79}, validCountry: "China", scenario: "The Mongols are expelled; Chinese rule is restored.", note: "Nanjing, China.", continent: "Asia" },
-        { year: "1274 AD", name: "Mongol Invasions of Japan", center: {lat: 33.59, lon: 130.40}, validCountry: "Japan", scenario: "The Kamikaze (divine wind) destroys a massive fleet.", note: "Fukuoka/Hakata Bay, Japan.", continent: "Asia" },
-        { year: "1644 AD", name: "Fall of Beijing", center: {lat: 39.90, lon: 116.40}, validCountry: "China", scenario: "Manchu forces breach the Great Wall.", note: "Beijing, China.", continent: "Asia" },
-        { year: "1945 AD", name: "Hiroshima", center: {lat: 34.38, lon: 132.45}, validCountry: "Japan", scenario: "The first deployment of an atomic weapon.", note: "Hiroshima, Japan.", continent: "Asia" },
-        { year: "1950 AD", name: "Battle of Inchon", center: {lat: 37.45, lon: 126.63}, validCountry: "South Korea", scenario: "A daring amphibious landing changes the Korean War.", note: "Incheon, South Korea.", continent: "Asia" },
-        { year: "649 AD", name: "Tibetan Empire", center: {lat: 29.65, lon: 91.11}, validCountry: "China", scenario: "Songtsen Gampo establishes a powerful highland state.", note: "Lhasa, Tibet.", continent: "Asia" },
-        { year: "1949 AD", name: "Retreat to Taiwan", center: {lat: 25.03, lon: 121.56}, validCountry: "Taiwan", scenario: "Nationalist forces flee the mainland.", note: "Taipei, Taiwan.", continent: "Asia" },
-
-        // Eastern Europe & Russia
-        { year: "882 AD", name: "Kievan Rus", center: {lat: 50.45, lon: 30.52}, validCountry: "Ukraine", scenario: "Oleg of Novgorod unifies the eastern Slavs.", note: "Kyiv, Ukraine.", continent: "Europe" },
-        { year: "1569 AD", name: "Polish-Lithuanian Commonwealth", center: {lat: 51.22, lon: 22.56}, validCountry: "Poland", scenario: "The Union of Lublin creates a massive dual state.", note: "Lublin, Poland.", continent: "Europe" },
-        { year: "1462 AD", name: "Wallachia", center: {lat: 44.93, lon: 25.45}, validCountry: "Romania", scenario: "Vlad the Impaler launches the Night Attack.", note: "Targoviste, Romania.", continent: "Europe" },
-        { year: "893 AD", name: "First Bulgarian Empire", center: {lat: 43.20, lon: 26.93}, validCountry: "Bulgaria", scenario: "The Cyrillic alphabet is developed.", note: "Preslav, Bulgaria.", continent: "Europe" },
-        { year: "1526 AD", name: "Battle of Mohács", center: {lat: 45.99, lon: 18.68}, validCountry: "Hungary", scenario: "The Kingdom of Hungary falls to the Ottomans.", note: "Mohács, Hungary.", continent: "Europe" },
-        { year: "1917 AD", name: "Russian Revolution", center: {lat: 59.93, lon: 30.33}, validCountry: "Russia", scenario: "The Bolsheviks storm the Winter Palace.", note: "St. Petersburg, Russia.", continent: "Europe" },
-        { year: "1943 AD", name: "Battle of Stalingrad", center: {lat: 48.70, lon: 44.51}, validCountry: "Russia", scenario: "The turning point of the Eastern Front.", note: "Volgograd, Russia.", continent: "Europe" },
-        { year: "1991 AD", name: "Breakup of Yugoslavia", center: {lat: 44.78, lon: 20.44}, validCountry: "Serbia", scenario: "A federal republic fragments into civil war.", note: "Belgrade, Serbia.", continent: "Europe" },
-        { year: "1410 AD", name: "Battle of Grunwald", center: {lat: 53.48, lon: 20.12}, validCountry: "Poland", scenario: "Teutonic Knights are decisively defeated.", note: "Grunwald, Poland.", continent: "Europe" },
-        { year: "1989 AD", name: "Velvet Revolution", center: {lat: 50.07, lon: 14.43}, validCountry: "Czech Republic", scenario: "A non-violent transition of power.", note: "Prague, Czech Republic.", continent: "Europe" },
-
-        // Western & Northern Europe
-        { year: "410 AD", name: "Sack of Rome", center: {lat: 41.90, lon: 12.49}, validCountry: "Italy", scenario: "Visigoths breach the Eternal City.", note: "Rome, Italy.", continent: "Europe" },
-        { year: "732 AD", name: "Battle of Tours", center: {lat: 47.39, lon: 0.68}, validCountry: "France", scenario: "Charles Martel halts the Umayyad advance.", note: "Tours, France.", continent: "Europe" },
-        { year: "793 AD", name: "Viking Age Begins", center: {lat: 55.67, lon: -1.79}, validCountry: "United Kingdom", scenario: "Norse raiders attack a peaceful monastery.", note: "Lindisfarne, UK.", continent: "Europe" },
-        { year: "1066 AD", name: "Battle of Hastings", center: {lat: 50.91, lon: 0.48}, validCountry: "United Kingdom", scenario: "The Norman conquest of England.", note: "Hastings, UK.", continent: "Europe" },
-        { year: "1397 AD", name: "Kalmar Union", center: {lat: 56.66, lon: 16.31}, validCountry: "Sweden", scenario: "Three Nordic kingdoms are unified under one monarch.", note: "Kalmar, Sweden.", continent: "Europe" },
-        { year: "1204 AD", name: "Venetian Republic", center: {lat: 45.44, lon: 12.31}, validCountry: "Italy", scenario: "A maritime powerhouse redirects the Fourth Crusade.", note: "Venice, Italy.", continent: "Europe" },
-        { year: "1492 AD", name: "Reconquista", center: {lat: 37.17, lon: -3.59}, validCountry: "Spain", scenario: "The fall of the Emirate of Granada.", note: "Granada, Spain.", continent: "Europe" },
-        { year: "1648 AD", name: "Peace of Westphalia", center: {lat: 51.96, lon: 7.62}, validCountry: "Germany", scenario: "The Thirty Years' War finally ends.", note: "Münster, Germany.", continent: "Europe" },
-        { year: "1916 AD", name: "Easter Rising", center: {lat: 53.34, lon: -6.26}, validCountry: "Ireland", scenario: "An armed insurrection for Irish independence.", note: "Dublin, Ireland.", continent: "Europe" },
-        { year: "1940 AD", name: "Dunkirk Evacuation", center: {lat: 51.03, lon: 2.37}, validCountry: "France", scenario: "Allied forces are rescued by a civilian flotilla.", note: "Dunkirk, France.", continent: "Europe" },
-
-        // Global Expeditions & Colonial Events
-        { year: "1520 AD", name: "Strait of Magellan", center: {lat: -53.16, lon: -70.91}, validCountry: "Chile", scenario: "A treacherous navigable route is discovered.", note: "Punta Arenas, Chile.", continent: "South America" },
-        { year: "1488 AD", name: "Cape of Good Hope", center: {lat: -34.35, lon: 18.47}, validCountry: "South Africa", scenario: "Dias rounds the southern tip of Africa.", note: "Cape Peninsula, South Africa.", continent: "Africa" },
-        { year: "1607 AD", name: "Jamestown Settlement", center: {lat: 37.21, lon: -76.77}, validCountry: "United States", scenario: "The first permanent English settlement in the Americas.", note: "Virginia, USA.", continent: "North America" },
-        { year: "1788 AD", name: "First Fleet", center: {lat: -33.98, lon: 151.22}, validCountry: "Australia", scenario: "A penal colony is established in Botany Bay.", note: "Sydney, Australia.", continent: "Oceania" },
-        { year: "1200 AD", name: "Rapa Nui", center: {lat: -27.11, lon: -109.36}, validCountry: "Chile", scenario: "Polynesians begin carving massive Moai statues.", note: "Easter Island, Chile.", continent: "Oceania" },
-        { year: "1835 AD", name: "Voyage of the Beagle", center: {lat: -0.77, lon: -90.31}, validCountry: "Ecuador", scenario: "Charles Darwin observes unique wildlife.", note: "Galapagos Islands, Ecuador.", continent: "South America" },
-        { year: "1869 AD", name: "Golden Spike", center: {lat: 41.61, lon: -112.55}, validCountry: "United States", scenario: "The First Transcontinental Railroad is completed.", note: "Promontory, Utah, USA.", continent: "North America" },
-        { year: "1904 AD", name: "Trans-Siberian Railway", center: {lat: 43.11, lon: 131.88}, validCountry: "Russia", scenario: "The longest railway line in the world is finished.", note: "Vladivostok, Russia.", continent: "Europe/Asia" },
-        { year: "1840 AD", name: "Treaty of Waitangi", center: {lat: -35.28, lon: 174.08}, validCountry: "New Zealand", scenario: "A foundational document is signed with the Māori.", note: "Waitangi, New Zealand.", continent: "Oceania" },
-        { year: "1791 AD", name: "Discovery of Antarctica", center: {lat: -77.84, lon: 166.68}, validCountry: "New Zealand", scenario: "Early expeditions push toward the icy continent.", note: "Ross Island Base.", continent: "Antarctica" },
-
-        // 19th & 20th Century Conflicts
-        { year: "1836 AD", name: "Battle of the Alamo", center: {lat: 29.42, lon: -98.48}, validCountry: "United States", scenario: "Texian defenders hold out against Santa Anna.", note: "San Antonio, Texas, USA.", continent: "North America" },
-        { year: "1839 AD", name: "First Opium War", center: {lat: 23.12, lon: 113.26}, validCountry: "China", scenario: "A conflict over trade and sovereignty begins.", note: "Guangzhou, China.", continent: "Asia" },
-        { year: "1853 AD", name: "Crimean War", center: {lat: 44.61, lon: 33.52}, validCountry: "Ukraine", scenario: "A siege defines early modern warfare.", note: "Sevastopol, Ukraine.", continent: "Europe" },
-        { year: "1899 AD", name: "Second Boer War", center: {lat: -25.74, lon: 28.18}, validCountry: "South Africa", scenario: "Guerrilla warfare erupts over gold and independence.", note: "Pretoria, South Africa.", continent: "Africa" },
-        { year: "1915 AD", name: "Gallipoli Campaign", center: {lat: 40.24, lon: 26.27}, validCountry: "Turkey", scenario: "An amphibious assault faces fierce Ottoman defense.", note: "Gallipoli Peninsula, Turkey.", continent: "Europe/Asia" },
-        { year: "1936 AD", name: "Spanish Civil War", center: {lat: 40.41, lon: -3.70}, validCountry: "Spain", scenario: "A brutal prelude to the Second World War.", note: "Madrid, Spain.", continent: "Europe" },
-        { year: "1941 AD", name: "Pearl Harbor", center: {lat: 21.36, lon: -157.95}, validCountry: "United States", scenario: "A surprise aerial attack forces America into war.", note: "Honolulu, Hawaii, USA.", continent: "North America" },
-        { year: "1954 AD", name: "Battle of Dien Bien Phu", center: {lat: 21.38, lon: 103.01}, validCountry: "Vietnam", scenario: "French colonial rule in Indochina ends.", note: "Dien Bien Phu, Vietnam.", continent: "Asia" },
-        { year: "1959 AD", name: "Cuban Revolution", center: {lat: 23.11, lon: -82.36}, validCountry: "Cuba", scenario: "Fidel Castro overthrows the Batista government.", note: "Havana, Cuba.", continent: "North America" },
-        { year: "1975 AD", name: "Fall of Saigon", center: {lat: 10.76, lon: 106.66}, validCountry: "Vietnam", scenario: "Helicopters evacuate the embassy roof.", note: "Ho Chi Minh City, Vietnam.", continent: "Asia" }
+        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" }
     ];
+
     // --- STORY TRANSMISSION DATA ---
     const storyBeats = {
         0: {
@@ -608,9 +573,12 @@
     storyLevels.sort((a,b) => parseYear(a.year) - parseYear(b.year));
 
     // GAME STATE
+    let dailyGuessCount = 0; // Tracks guesses in the current daily run
+    let defaultStats = { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0, '6+':0} };
     let currentMode = null; 
     let currentLevelIdx = 0;
     let currentLevelList = [];
+    let dailyGuessHistory = [];
     let health = 100;
     let gameOver = false;
 
@@ -651,9 +619,15 @@
         }
     }
 
-function startDaily() {
+    function startDaily() {
         currentLevelList = dailyLevels;
         const today = new Date().toISOString().slice(0, 10);
+        
+        // Calculate Index FIRST so we know the level even if they already played
+        const dateNum = parseInt(today.replace(/-/g, ''));
+        let seed = Math.imul(dateNum, 1597334677); 
+        const rand = mulberry32(seed);
+        currentLevelIdx = Math.floor(rand() * dailyLevels.length);
         
         const savedResult = localStorage.getItem('temporle_daily_' + today);
         if (savedResult) {
@@ -661,29 +635,77 @@ function startDaily() {
             document.getElementById('scenarioText').innerText = "Daily Paradox already attempted.";
             gameOver = true;
             document.getElementById('countryInput').disabled = true;
+            
             if(savedResult === 'win') {
                 document.getElementById('winModal').style.display = 'flex';
                 document.getElementById('winMsg').innerText = "Daily Complete";
+                populateDebrief('winDebrief', dailyLevels[currentLevelIdx]); // SHOW DEBRIEF
                 document.getElementById('dailyCompleteUI').classList.remove('hidden');
                 document.getElementById('nextLvlBtn').classList.add('hidden');
                 startTimer();
             } else {
                 document.getElementById('loseModal').style.display = 'flex';
+                populateDebrief('loseDebrief', dailyLevels[currentLevelIdx]); // SHOW DEBRIEF
                 document.getElementById('dailyFailUI').classList.remove('hidden');
                 document.getElementById('retryBtn').classList.add('hidden');
             }
             return;
         }
 
-        // THE FIX: Convert date to a massive integer and scramble it
-        const dateNum = parseInt(today.replace(/-/g, ''));
-        let seed = Math.imul(dateNum, 1597334677); // Scramble the bits widely
-        const rand = mulberry32(seed);
-        
-        currentLevelIdx = Math.floor(rand() * dailyLevels.length);
         health = 100;
         gameOver = false;
         loadLevel(currentLevelIdx);
+    }
+
+    function triggerWin() {
+        sfx.win();
+        const today = new Date().toISOString().slice(0, 10);
+        
+        if (currentMode === 'story') {
+            health += 15; 
+            if (health > 100) health = 100;
+            updateHealthUI();
+            
+            document.getElementById('winMsg').innerText = currentLevelList[currentLevelIdx].name;
+            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
+            document.getElementById('winModal').style.display = 'flex';
+            document.getElementById('nextLvlBtn').classList.remove('hidden');
+            document.getElementById('dailyCompleteUI').classList.add('hidden');
+        } else {
+            localStorage.setItem('temporle_daily_' + today, 'win');
+            generateShareText(true);
+            saveAndRenderStats(true);
+            
+            document.getElementById('winMsg').innerText = "Daily Paradox Resolved";
+            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
+            populateDebrief('winDebrief', currentLevelList[currentLevelIdx]); // SHOW DEBRIEF
+            
+            document.getElementById('winModal').style.display = 'flex';
+            document.getElementById('nextLvlBtn').classList.add('hidden');
+            document.getElementById('dailyCompleteUI').classList.remove('hidden');
+            startTimer();
+        }
+    }
+
+    function triggerLoss() {
+        gameOver = true;
+        sfx.err();
+        const today = new Date().toISOString().slice(0, 10);
+        
+        if (currentMode === 'daily') {
+            localStorage.setItem('temporle_daily_' + today, 'lose');
+            generateShareText(false);
+            saveAndRenderStats(false);
+            
+            populateDebrief('loseDebrief', currentLevelList[currentLevelIdx]); // SHOW DEBRIEF
+            
+            document.getElementById('dailyFailUI').classList.remove('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+        } else {
+            document.getElementById('dailyFailUI').classList.add('hidden');
+            document.getElementById('retryBtn').classList.remove('hidden');
+        }
+        document.getElementById('loseModal').style.display = 'flex';
     }
 
     function loadLevel(idx) {
@@ -761,6 +783,7 @@ function startDaily() {
     function useAbility(type) {
         if (gameOver) return;
         const cost = type === 'continent' ? 15 : 10;
+        if (currentMode === 'daily') dailyGuessCount++; // ADD THIS LINE HERE
         if (health <= cost) { sfx.err(); return; }
 
         sfx.click();
@@ -793,6 +816,8 @@ function startDaily() {
             return;
         }
 
+        if (currentMode === 'daily') dailyGuessCount++;
+
         sfx.scan();
         input.value = '';
         document.getElementById('suggestions').style.display = 'none';
@@ -818,6 +843,15 @@ function startDaily() {
             health -= damage;
             if (health <= 0) { health = 0; triggerLoss(); }
         }
+
+        // ADD THIS EMOJI TRACKER
+        if (currentMode === 'daily') {
+            if (win) dailyGuessHistory.push('🟩');
+            else if (dist < 800) dailyGuessHistory.push('🟧');
+            else if (dist < 2500) dailyGuessHistory.push('🟨');
+            else dailyGuessHistory.push('⬛️');
+        }
+
         updateHealthUI();
 
         addLogEntry(country.name, Math.round(dist), win);
@@ -827,46 +861,7 @@ function startDaily() {
         if (win && health > 0) triggerWin();
     }
 
-    function triggerWin() {
-        sfx.win();
-        const today = new Date().toISOString().slice(0, 10);
-        
-        if (currentMode === 'story') {
-            health += 15; 
-            if (health > 100) health = 100;
-            updateHealthUI();
-            
-            document.getElementById('winMsg').innerText = currentLevelList[currentLevelIdx].name;
-            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
-            document.getElementById('winModal').style.display = 'flex';
-            document.getElementById('nextLvlBtn').classList.remove('hidden');
-            document.getElementById('dailyCompleteUI').classList.add('hidden');
-        } else {
-            localStorage.setItem('temporle_daily_' + today, 'win');
-            document.getElementById('winMsg').innerText = "Daily Paradox Resolved";
-            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
-            document.getElementById('winModal').style.display = 'flex';
-            document.getElementById('nextLvlBtn').classList.add('hidden');
-            document.getElementById('dailyCompleteUI').classList.remove('hidden');
-            startTimer();
-        }
-    }
-
-    function triggerLoss() {
-        gameOver = true;
-        sfx.err();
-        const today = new Date().toISOString().slice(0, 10);
-        
-        if (currentMode === 'daily') {
-            localStorage.setItem('temporle_daily_' + today, 'lose');
-            document.getElementById('dailyFailUI').classList.remove('hidden');
-            document.getElementById('retryBtn').classList.add('hidden');
-        } else {
-            document.getElementById('dailyFailUI').classList.add('hidden');
-            document.getElementById('retryBtn').classList.remove('hidden');
-        }
-        document.getElementById('loseModal').style.display = 'flex';
-    }
+    
 
     function nextLevel() {
         if (currentLevelIdx + 1 >= currentLevelList.length) {
@@ -972,6 +967,146 @@ function startDaily() {
     });
     input.addEventListener("keydown", (e) => { if (e.key === "Enter") { if (box.style.display === "block" && box.firstChild) input.value = box.firstChild.innerText; handleGuess(); } });
     document.addEventListener('click', (e) => { if (e.target !== input) box.style.display = 'none'; });
+
+    // --- ANALYTICS ENGINE ---
+    function loadStats() {
+        const stored = localStorage.getItem('temporle_stats');
+        return stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(defaultStats));
+    }
+
+    function saveAndRenderStats(isWin) {
+        if (currentMode !== 'daily') return;
+        
+        let stats = loadStats();
+        stats.played += 1;
+        
+        if (isWin) {
+            stats.wins += 1;
+            stats.currentStreak += 1;
+            if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
+            
+            // BULLETPROOFING: Ensure minimum guess is 1, max is 6+
+            let validCount = Math.max(1, dailyGuessCount);
+            let bucket = validCount >= 6 ? '6+' : validCount.toString();
+            
+            stats.distribution[bucket] += 1;
+        } else {
+            stats.currentStreak = 0;
+        }
+        
+        localStorage.setItem('temporle_stats', JSON.stringify(stats));
+        setTimeout(() => showStats(dailyGuessCount), 1500); 
+    }
+
+    function showStats(highlightBucket = null) {
+        const stats = loadStats();
+        
+        // Calculate Win Pct
+        const winPct = stats.played === 0 ? 0 : Math.round((stats.wins / stats.played) * 100);
+        
+        document.getElementById('statPlayed').innerText = stats.played;
+        document.getElementById('statWinPct').innerText = winPct;
+        document.getElementById('statStreak').innerText = stats.currentStreak;
+        document.getElementById('statMax').innerText = stats.maxStreak;
+        
+        // Build Distribution Chart
+        const chart = document.getElementById('distChart');
+        chart.innerHTML = '';
+        
+        let maxCount = 0;
+        for (let key in stats.distribution) {
+            if (stats.distribution[key] > maxCount) maxCount = stats.distribution[key];
+        }
+        if (maxCount === 0) maxCount = 1; // Prevent divide by zero
+
+        ['1', '2', '3', '4', '5', '6+'].forEach(key => {
+            const count = stats.distribution[key];
+            const widthPct = Math.max(8, Math.round((count / maxCount) * 100)); // Min 8% width
+            
+            const isHighlight = (highlightBucket !== null && key == (highlightBucket > 6 ? '6+' : highlightBucket));
+            const fillClass = isHighlight ? 'dist-bar-fill highlight' : 'dist-bar-fill';
+
+            const row = document.createElement('div');
+            row.className = 'dist-row';
+            row.innerHTML = `
+                <div style="width: 20px; text-align: right;">${key}</div>
+                <div class="dist-bar-wrapper">
+                    <div class="${fillClass}" style="width: ${widthPct}%">${count}</div>
+                </div>
+            `;
+            chart.appendChild(row);
+        });
+
+        document.getElementById('statsModal').style.display = 'flex';
+    }
+
+    // --- SHARE EMOJI LOGIC ---
+    function generateShareText(won) {
+        const today = new Date().toISOString().slice(0, 10);
+        
+        // Chunk the grid into lines of 5 emojis so it doesn't break text message formatting
+        let grid = "";
+        for (let i = 0; i < dailyGuessHistory.length; i += 5) {
+            grid += dailyGuessHistory.slice(i, i + 5).join('') + "\n";
+        }
+        
+        const status = won ? health + "%" : "Collapsed";
+        const shareText = `Temporle - ${today} ⏳\n${grid.trim()}\nIntegrity: ${status}\nPlay at: yourwebsite.com`; // Add your actual URL here!
+        
+        localStorage.setItem('temporle_share_' + today, shareText);
+    }
+
+    // --- SHARE EMOJI LOGIC ---
+    function shareResult() {
+        const today = new Date().toISOString().slice(0, 10);
+        const text = localStorage.getItem('temporle_share_' + today);
+        
+        if (!text) return;
+
+        // Modern approach (Works on HTTPS like GitHub Pages)
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(showToast);
+        } else {
+            // Fallback approach (Works on local file:/// testing)
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // Hide the text area off-screen
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Clipboard fallback failed', err);
+            }
+            
+            document.body.removeChild(textArea);
+        }
+    }
+
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.className = "show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2800);
+    }
+
+    function populateDebrief(elementId, level) {
+        const debriefHTML = `
+            <div class="debrief-title">Historical Log // ${level.year}</div>
+            <div class="debrief-text"><strong>${level.name}:</strong> ${level.scenario} Located in modern-day ${level.validCountry}.</div>
+            <a href="https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(level.name)}" target="_blank" class="wiki-link">Read Article ↗</a>
+        `;
+        const container = document.getElementById(elementId);
+        container.innerHTML = debriefHTML;
+        container.classList.remove('hidden');
+    }
 </script>
 </body>
 </html>
