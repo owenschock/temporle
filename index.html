@@ -9,6 +9,10 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://yourwebsite.com/temporle"> <meta property="og:image" content="https://ui-avatars.com/api/?name=Te&background=4f46e5&color=fff&size=512&font-size=0.5"> <meta name="twitter:card" content="summary_large_image">
     <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Temporle">
+    <meta name="mobile-web-app-capable" content="yes">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%234f46e5'/><circle cx='50' cy='50' r='40' fill='%23ffffff'/><path d='M50 20 V50 L70 70' stroke='%234f46e5' stroke-width='8' stroke-linecap='round'/></svg>">
     <style>
@@ -211,6 +215,32 @@
         .wiki-link { display: inline-block; color: white; background: var(--primary); padding: 8px 16px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85rem; transition: 0.2s; }
         .wiki-link:hover { background: var(--primary-hover); transform: translateY(-2px); }
 
+        /* DAMAGE FEEDBACK */
+        @keyframes damageShake {
+            0% { transform: translateX(0); background-color: rgba(239, 68, 68, 0.2); }
+            25% { transform: translateX(-15px); }
+            50% { transform: translateX(15px); }
+            75% { transform: translateX(-15px); }
+            100% { transform: translateX(0); background-color: transparent; }
+        }
+        .taking-damage { animation: damageShake 0.4s ease-in-out; }
+
+        /* TROPHY CABINET */
+        .trophy-row { display: flex; justify-content: space-around; margin-top: 10px; background: #f9fafb; padding: 15px; border-radius: 12px; border: 1px solid var(--border); }
+        .trophy { font-size: 2.2rem; opacity: 0.2; filter: grayscale(1); transition: 0.3s; position: relative; cursor: help; }
+        .trophy.unlocked { opacity: 1; filter: grayscale(0); transform: scale(1.1); }
+        .trophy-tooltip { visibility: hidden; width: 130px; background: var(--text-main); color: #fff; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 1; bottom: 110%; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; box-shadow: 0 4px 6px rgba(0,0,0,0.1); opacity: 0; transition: opacity 0.2s; }
+        .trophy-tooltip::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: var(--text-main) transparent transparent transparent; }
+        .trophy:hover .trophy-tooltip { visibility: visible; opacity: 1; }
+
+        /* LATEST RADAR BLIP PULSE */
+        @keyframes pulseBlip {
+            0% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.7); }
+            70% { transform: translate(-50%, -50%) scale(1.5); box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+            100% { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+        .blip.latest { animation: pulseBlip 1.5s infinite; z-index: 20; border-color: var(--primary); }
+
     </style>
 </head>
 <body>
@@ -292,7 +322,10 @@
                     <div class="radar-ring r2"></div>
                     <div class="radar-ring r3"></div>
                 </div>
-                <div id="radarReadout" style="font-weight: 700; color: var(--text-muted); margin-top:10px;">Standby</div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top:15px;">
+                    <div id="compassArrow" style="font-size: 1.5rem; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); transform: rotate(0deg);">⬆️</div>
+                    <div id="radarReadout" style="font-weight: 700; color: var(--text-muted);">Standby</div>
+                </div>
             </div>
         </div>
     </div>
@@ -314,7 +347,7 @@
 
             <div id="winDebrief" class="debrief-box hidden"></div>
 
-            <button class="btn-modal" style="background: var(--success); margin-top: 15px;" onclick="shareResult()">Share Result 📋</button>
+            <button class="btn-modal" style="background: var(--success); margin-top: 15px;" onclick="shareResult(this)">Share Result 📋</button>
             <button class="btn-modal" style="background: var(--primary); margin-top: 10px;" onclick="showStats()">View Stats</button>
             <button class="btn-modal" style="background: var(--text-main); margin-top: 10px;" onclick="location.reload()">Main Menu</button>
         </div>
@@ -331,7 +364,7 @@
              
              <div id="loseDebrief" class="debrief-box hidden"></div>
         
-             <button class="btn-modal" style="background: var(--accent); margin-bottom: 10px;" onclick="shareResult()">Share Result 📋</button>
+             <button class="btn-modal" style="background: var(--accent); margin-bottom: 10px;" onclick="shareResult(this)">Share Result 📋</button>
              <button class="btn-modal" style="background: var(--primary); margin-bottom: 10px;" onclick="showStats()">View Stats</button>
              <button class="btn-modal" style="background: var(--text-main);" onclick="location.reload()">Main Menu</button>
         </div>
@@ -348,7 +381,7 @@
     </div>
 </div>
 
-<div id="statsModal" class="overlay" style="z-index: 300;">
+<div id="statsModal" class="overlay" style="z-index: 300;" onclick="if(event.target === this) closeStats()">
     <div class="modal">
         <h2 style="margin-bottom: 20px; color: var(--text-main);">Daily Statistics</h2>
         
@@ -362,8 +395,15 @@
         <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 10px;">Guess Distribution</div>
         <div id="distChart" class="dist-container">
             </div>
+            <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 5px; margin-top: 20px;">Trophy Cabinet</div>
+        <div class="trophy-row" id="trophyCase">
+            <div class="trophy" id="trophySniper"><div class="trophy-tooltip">Sniper<br><span style="color:var(--accent); font-size:0.6rem;">Win on Guess 1</span></div>🎯</div>
+            <div class="trophy" id="trophyClutch"><div class="trophy-tooltip">Clutch<br><span style="color:var(--accent); font-size:0.6rem;">Win with < 10% Integrity</span></div>🥵</div>
+            <div class="trophy" id="trophyVeteran"><div class="trophy-tooltip">Veteran<br><span style="color:var(--accent); font-size:0.6rem;">Reach a 7-Day Streak</span></div>🏅</div>
+            <div class="trophy" id="trophyScholar"><div class="trophy-tooltip">Scholar<br><span style="color:var(--accent); font-size:0.6rem;">Play 30 Total Games</span></div>🦉</div>
+        </div>
 
-        <button class="btn-modal" onclick="document.getElementById('statsModal').style.display='none'">Close</button>
+        <button class="btn-modal" onclick="closeStats()">Close</button>
     </div>
 </div>
 
@@ -506,8 +546,9 @@
         { year: "1994 AD", name: "End of Apartheid", center: {lat: -25.74, lon: 28.18}, validCountry: "South Africa", scenario: "Mandela elected President.", note: "Pretoria, South Africa.", continent: "Africa" }
     ];
 
-    // --- 30 DAILY LEVELS (Random Events) ---
+    // --- 130 DAILY LEVELS (Random Events) ---
     let dailyLevels = [
+        // Original 30
         { year: "1969 AD", name: "Apollo 11", center: {lat: 29.55, lon: -95.09}, validCountry: "United States", scenario: "'Houston, the Eagle has landed.'", note: "Johnson Space Center, Houston.", continent: "North America" },
         { year: "1789 AD", name: "French Revolution", center: {lat: 48.85, lon: 2.35}, validCountry: "France", scenario: "The Bastille is stormed.", note: "Paris, France.", continent: "Europe" },
         { year: "1912 AD", name: "RMS Titanic", center: {lat: 50.90, lon: -1.40}, validCountry: "United Kingdom", scenario: "The ship departs on its maiden voyage.", note: "Southampton, UK.", continent: "Europe" },
@@ -536,8 +577,239 @@
         { year: "1997 AD", name: "Handover of Hong Kong", center: {lat: 22.31, lon: 114.16}, validCountry: "China", scenario: "The end of the British Empire in Asia.", note: "Hong Kong, China.", continent: "Asia" },
         { year: "1929 AD", name: "Wall Street Crash", center: {lat: 40.71, lon: -74.00}, validCountry: "United States", scenario: "Black Tuesday triggers the Great Depression.", note: "New York City, USA.", continent: "North America" },
         { year: "1901 AD", name: "First Nobel Prizes", center: {lat: 59.32, lon: 18.06}, validCountry: "Sweden", scenario: "Awards established by the inventor of dynamite.", note: "Stockholm, Sweden.", continent: "Europe" },
-        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" }
+        { year: "1979 AD", name: "Iranian Revolution", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "The Shah is overthrown.", note: "Tehran, Iran.", continent: "Asia" },
+
+        // South & Central America
+        { year: "100 BC", name: "Nazca Lines", center: {lat: -14.73, lon: -75.13}, validCountry: "Peru", scenario: "Massive geoglyphs are carved into the desert floor.", note: "Nazca Desert, Peru.", continent: "South America" },
+        { year: "600 AD", name: "Tiwanaku Empire", center: {lat: -16.55, lon: -68.67}, validCountry: "Bolivia", scenario: "A high-altitude civilization dominates the Andes.", note: "Lake Titicaca, Bolivia.", continent: "South America" },
+        { year: "1532 AD", name: "Muisca Confederation", center: {lat: 4.60, lon: -74.08}, validCountry: "Colombia", scenario: "The legend of El Dorado originates here.", note: "Bogota, Colombia.", continent: "South America" },
+        { year: "1550 AD", name: "Mapuche Resistance", center: {lat: -38.73, lon: -72.59}, validCountry: "Chile", scenario: "Indigenous forces successfully repel European invaders.", note: "Araucania, Chile.", continent: "South America" },
+        { year: "1824 AD", name: "Battle of Ayacucho", center: {lat: -13.16, lon: -74.22}, validCountry: "Peru", scenario: "The decisive battle for South American independence.", note: "Ayacucho, Peru.", continent: "South America" },
+        { year: "1914 AD", name: "Panama Canal Opens", center: {lat: 9.14, lon: -79.72}, validCountry: "Panama", scenario: "The Atlantic and Pacific oceans are finally connected.", note: "Panama Canal.", continent: "North America" },
+        { year: "1982 AD", name: "Falklands War", center: {lat: -51.69, lon: -57.85}, validCountry: "Argentina", scenario: "A territorial conflict over South Atlantic islands.", note: "Falkland Islands/Malvinas.", continent: "South America" },
+        { year: "1536 AD", name: "Founding of Buenos Aires", center: {lat: -34.60, lon: -58.38}, validCountry: "Argentina", scenario: "Spanish colonizers establish a port on the Rio de la Plata.", note: "Buenos Aires, Argentina.", continent: "South America" },
+        { year: "1889 AD", name: "Republic of Brazil", center: {lat: -15.79, lon: -47.88}, validCountry: "Brazil", scenario: "The monarchy is overthrown by a military coup.", note: "Rio de Janeiro, Brazil.", continent: "South America" },
+        { year: "1960 AD", name: "Brasília Inaugurated", center: {lat: -15.79, lon: -47.86}, validCountry: "Brazil", scenario: "A modernist capital city is built from scratch.", note: "Brasília, Brazil.", continent: "South America" },
+
+        // Africa
+        { year: "1492 AD", name: "Songhai Empire", center: {lat: 16.27, lon: -0.05}, validCountry: "Mali", scenario: "Askia the Great expands the empire to its zenith.", note: "Gao, Mali.", continent: "Africa" },
+        { year: "1700 AD", name: "Ashanti Empire", center: {lat: 6.68, lon: -1.62}, validCountry: "Ghana", scenario: "The Golden Stool unites a powerful West African state.", note: "Kumasi, Ghana.", continent: "Africa" },
+        { year: "1879 AD", name: "Battle of Isandlwana", center: {lat: -28.35, lon: 30.65}, validCountry: "South Africa", scenario: "Zulu warriors defeat the British army.", note: "KwaZulu-Natal, South Africa.", continent: "Africa" },
+        { year: "200 BC", name: "Kingdom of Kush", center: {lat: 16.93, lon: 33.74}, validCountry: "Sudan", scenario: "The Black Pharaohs rule from their desert pyramids.", note: "Meroë, Sudan.", continent: "Africa" },
+        { year: "1800 AD", name: "Dahomey Amazons", center: {lat: 7.18, lon: 1.99}, validCountry: "Benin", scenario: "An all-female military regiment defends the kingdom.", note: "Abomey, Benin.", continent: "Africa" },
+        { year: "1300 AD", name: "Kilwa Sultanate", center: {lat: -8.95, lon: 39.50}, validCountry: "Tanzania", scenario: "A wealthy Swahili city-state dominates Indian Ocean trade.", note: "Kilwa Kisiwani, Tanzania.", continent: "Africa" },
+        { year: "1652 AD", name: "Cape Colony Founded", center: {lat: -33.92, lon: 18.42}, validCountry: "South Africa", scenario: "The Dutch East India Company establishes a supply station.", note: "Cape Town, South Africa.", continent: "Africa" },
+        { year: "1956 AD", name: "Suez Crisis", center: {lat: 30.58, lon: 32.27}, validCountry: "Egypt", scenario: "An international dispute over a vital canal.", note: "Suez, Egypt.", continent: "Africa" },
+        { year: "1994 AD", name: "Rwandan Tragedy", center: {lat: -1.94, lon: 29.87}, validCountry: "Rwanda", scenario: "A nation falls into horrific sectarian violence.", note: "Kigali, Rwanda.", continent: "Africa" },
+        { year: "1898 AD", name: "Fashoda Incident", center: {lat: 9.88, lon: 32.05}, validCountry: "South Sudan", scenario: "British and French colonial empires clash.", note: "Kodok, South Sudan.", continent: "Africa" },
+
+        // Middle East & Central Asia
+        { year: "3000 BC", name: "Elamite Empire", center: {lat: 32.03, lon: 48.29}, validCountry: "Iran", scenario: "One of the earliest civilizations arises east of Sumer.", note: "Susa, Iran.", continent: "Asia" },
+        { year: "250 BC", name: "Nabataean Kingdom", center: {lat: 30.32, lon: 35.44}, validCountry: "Jordan", scenario: "A desert capital carved directly into rose-red cliffs.", note: "Petra, Jordan.", continent: "Asia" },
+        { year: "224 AD", name: "Sassanid Empire", center: {lat: 33.09, lon: 44.58}, validCountry: "Iraq", scenario: "The last pre-Islamic Persian empire builds its capital.", note: "Ctesiphon, Iraq.", continent: "Asia" },
+        { year: "1037 AD", name: "Seljuk Empire", center: {lat: 35.68, lon: 51.38}, validCountry: "Iran", scenario: "Turkic nomads establish a vast empire.", note: "Rayy/Tehran, Iran.", continent: "Asia" },
+        { year: "1501 AD", name: "Safavid Dynasty", center: {lat: 38.07, lon: 46.29}, validCountry: "Iran", scenario: "Shia Islam is established as the state religion.", note: "Tabriz, Iran.", continent: "Asia" },
+        { year: "1979 AD", name: "Soviet-Afghan War", center: {lat: 34.52, lon: 69.17}, validCountry: "Afghanistan", scenario: "A superpower invades the Graveyard of Empires.", note: "Kabul, Afghanistan.", continent: "Asia" },
+        { year: "1948 AD", name: "Creation of Israel", center: {lat: 32.08, lon: 34.78}, validCountry: "Israel", scenario: "David Ben-Gurion declares a new state.", note: "Tel Aviv, Israel.", continent: "Asia" },
+        { year: "1990 AD", name: "Gulf War Begins", center: {lat: 29.37, lon: 47.97}, validCountry: "Kuwait", scenario: "Iraqi forces cross the southern border.", note: "Kuwait City, Kuwait.", continent: "Asia" },
+        { year: "1923 AD", name: "Republic of Turkey", center: {lat: 39.92, lon: 32.85}, validCountry: "Turkey", scenario: "Atatürk establishes a modern secular state.", note: "Ankara, Turkey.", continent: "Asia" },
+        { year: "1398 AD", name: "Sack of Delhi", center: {lat: 28.61, lon: 77.20}, validCountry: "India", scenario: "Timur invades the Delhi Sultanate.", note: "Delhi, India.", continent: "Asia" },
+
+        // South & Southeast Asia
+        { year: "1025 AD", name: "Chola Dynasty", center: {lat: 10.79, lon: 79.13}, validCountry: "India", scenario: "A southern Indian empire launches a naval invasion.", note: "Thanjavur, India.", continent: "Asia" },
+        { year: "320 AD", name: "Gupta Empire", center: {lat: 25.59, lon: 85.13}, validCountry: "India", scenario: "The Golden Age of Indian science and mathematics.", note: "Pataliputra, India.", continent: "Asia" },
+        { year: "1674 AD", name: "Maratha Empire", center: {lat: 18.52, lon: 73.85}, validCountry: "India", scenario: "Shivaji establishes a Hindu warrior state.", note: "Pune, India.", continent: "Asia" },
+        { year: "700 AD", name: "Srivijaya Empire", center: {lat: -2.99, lon: 104.75}, validCountry: "Indonesia", scenario: "A maritime empire controls the Strait of Malacca.", note: "Palembang, Indonesia.", continent: "Asia" },
+        { year: "1350 AD", name: "Ayutthaya Kingdom", center: {lat: 14.35, lon: 100.56}, validCountry: "Thailand", scenario: "A powerful Siamese kingdom flourishes.", note: "Ayutthaya, Thailand.", continent: "Asia" },
+        { year: "1550 AD", name: "Toungoo Dynasty", center: {lat: 18.93, lon: 96.43}, validCountry: "Myanmar", scenario: "The largest empire in Southeast Asian history.", note: "Bago, Myanmar.", continent: "Asia" },
+        { year: "1000 AD", name: "Champa Kingdom", center: {lat: 15.87, lon: 108.33}, validCountry: "Vietnam", scenario: "An ancient maritime culture builds Hindu temples.", note: "My Son, Vietnam.", continent: "Asia" },
+        { year: "1947 AD", name: "Partition of India", center: {lat: 31.52, lon: 74.35}, validCountry: "Pakistan", scenario: "Mass migration follows the end of British rule.", note: "Lahore, Pakistan.", continent: "Asia" },
+        { year: "1971 AD", name: "Bangladesh Liberation", center: {lat: 23.81, lon: 90.41}, validCountry: "Bangladesh", scenario: "East Pakistan fights for independence.", note: "Dhaka, Bangladesh.", continent: "Asia" },
+        { year: "1565 AD", name: "Spanish Philippines", center: {lat: 10.31, lon: 123.89}, validCountry: "Philippines", scenario: "The first Spanish settlement in the archipelago.", note: "Cebu, Philippines.", continent: "Asia" },
+
+        // East Asia
+        { year: "221 BC", name: "Qin Dynasty", center: {lat: 34.26, lon: 108.93}, validCountry: "China", scenario: "The first Emperor unifies the warring states.", note: "Xi'an, China.", continent: "Asia" },
+        { year: "400 AD", name: "Goguryeo Kingdom", center: {lat: 39.03, lon: 125.75}, validCountry: "North Korea", scenario: "A powerful ancient Korean kingdom peaks.", note: "Pyongyang, North Korea.", continent: "Asia" },
+        { year: "794 AD", name: "Heian Period", center: {lat: 35.01, lon: 135.76}, validCountry: "Japan", scenario: "A golden age of Japanese art and literature begins.", note: "Kyoto, Japan.", continent: "Asia" },
+        { year: "1368 AD", name: "Ming Dynasty", center: {lat: 32.06, lon: 118.79}, validCountry: "China", scenario: "The Mongols are expelled; Chinese rule is restored.", note: "Nanjing, China.", continent: "Asia" },
+        { year: "1274 AD", name: "Mongol Invasions of Japan", center: {lat: 33.59, lon: 130.40}, validCountry: "Japan", scenario: "The Kamikaze (divine wind) destroys a massive fleet.", note: "Fukuoka/Hakata Bay, Japan.", continent: "Asia" },
+        { year: "1644 AD", name: "Fall of Beijing", center: {lat: 39.90, lon: 116.40}, validCountry: "China", scenario: "Manchu forces breach the Great Wall.", note: "Beijing, China.", continent: "Asia" },
+        { year: "1945 AD", name: "Hiroshima", center: {lat: 34.38, lon: 132.45}, validCountry: "Japan", scenario: "The first deployment of an atomic weapon.", note: "Hiroshima, Japan.", continent: "Asia" },
+        { year: "1950 AD", name: "Battle of Inchon", center: {lat: 37.45, lon: 126.63}, validCountry: "South Korea", scenario: "A daring amphibious landing changes the Korean War.", note: "Incheon, South Korea.", continent: "Asia" },
+        { year: "649 AD", name: "Tibetan Empire", center: {lat: 29.65, lon: 91.11}, validCountry: "China", scenario: "Songtsen Gampo establishes a powerful highland state.", note: "Lhasa, Tibet.", continent: "Asia" },
+        { year: "1949 AD", name: "Retreat to Taiwan", center: {lat: 25.03, lon: 121.56}, validCountry: "Taiwan", scenario: "Nationalist forces flee the mainland.", note: "Taipei, Taiwan.", continent: "Asia" },
+
+        // Eastern Europe & Russia
+        { year: "882 AD", name: "Kievan Rus", center: {lat: 50.45, lon: 30.52}, validCountry: "Ukraine", scenario: "Oleg of Novgorod unifies the eastern Slavs.", note: "Kyiv, Ukraine.", continent: "Europe" },
+        { year: "1569 AD", name: "Polish-Lithuanian Commonwealth", center: {lat: 51.22, lon: 22.56}, validCountry: "Poland", scenario: "The Union of Lublin creates a massive dual state.", note: "Lublin, Poland.", continent: "Europe" },
+        { year: "1462 AD", name: "Wallachia", center: {lat: 44.93, lon: 25.45}, validCountry: "Romania", scenario: "Vlad the Impaler launches the Night Attack.", note: "Targoviste, Romania.", continent: "Europe" },
+        { year: "893 AD", name: "First Bulgarian Empire", center: {lat: 43.20, lon: 26.93}, validCountry: "Bulgaria", scenario: "The Cyrillic alphabet is developed.", note: "Preslav, Bulgaria.", continent: "Europe" },
+        { year: "1526 AD", name: "Battle of Mohács", center: {lat: 45.99, lon: 18.68}, validCountry: "Hungary", scenario: "The Kingdom of Hungary falls to the Ottomans.", note: "Mohács, Hungary.", continent: "Europe" },
+        { year: "1917 AD", name: "Russian Revolution", center: {lat: 59.93, lon: 30.33}, validCountry: "Russia", scenario: "The Bolsheviks storm the Winter Palace.", note: "St. Petersburg, Russia.", continent: "Europe" },
+        { year: "1943 AD", name: "Battle of Stalingrad", center: {lat: 48.70, lon: 44.51}, validCountry: "Russia", scenario: "The turning point of the Eastern Front.", note: "Volgograd, Russia.", continent: "Europe" },
+        { year: "1991 AD", name: "Breakup of Yugoslavia", center: {lat: 44.78, lon: 20.44}, validCountry: "Serbia", scenario: "A federal republic fragments into civil war.", note: "Belgrade, Serbia.", continent: "Europe" },
+        { year: "1410 AD", name: "Battle of Grunwald", center: {lat: 53.48, lon: 20.12}, validCountry: "Poland", scenario: "Teutonic Knights are decisively defeated.", note: "Grunwald, Poland.", continent: "Europe" },
+        { year: "1989 AD", name: "Velvet Revolution", center: {lat: 50.07, lon: 14.43}, validCountry: "Czech Republic", scenario: "A non-violent transition of power.", note: "Prague, Czech Republic.", continent: "Europe" },
+
+        // Western & Northern Europe
+        { year: "410 AD", name: "Sack of Rome", center: {lat: 41.90, lon: 12.49}, validCountry: "Italy", scenario: "Visigoths breach the Eternal City.", note: "Rome, Italy.", continent: "Europe" },
+        { year: "732 AD", name: "Battle of Tours", center: {lat: 47.39, lon: 0.68}, validCountry: "France", scenario: "Charles Martel halts the Umayyad advance.", note: "Tours, France.", continent: "Europe" },
+        { year: "793 AD", name: "Viking Age Begins", center: {lat: 55.67, lon: -1.79}, validCountry: "United Kingdom", scenario: "Norse raiders attack a peaceful monastery.", note: "Lindisfarne, UK.", continent: "Europe" },
+        { year: "1066 AD", name: "Battle of Hastings", center: {lat: 50.91, lon: 0.48}, validCountry: "United Kingdom", scenario: "The Norman conquest of England.", note: "Hastings, UK.", continent: "Europe" },
+        { year: "1397 AD", name: "Kalmar Union", center: {lat: 56.66, lon: 16.31}, validCountry: "Sweden", scenario: "Three Nordic kingdoms are unified under one monarch.", note: "Kalmar, Sweden.", continent: "Europe" },
+        { year: "1204 AD", name: "Venetian Republic", center: {lat: 45.44, lon: 12.31}, validCountry: "Italy", scenario: "A maritime powerhouse redirects the Fourth Crusade.", note: "Venice, Italy.", continent: "Europe" },
+        { year: "1492 AD", name: "Reconquista", center: {lat: 37.17, lon: -3.59}, validCountry: "Spain", scenario: "The fall of the Emirate of Granada.", note: "Granada, Spain.", continent: "Europe" },
+        { year: "1648 AD", name: "Peace of Westphalia", center: {lat: 51.96, lon: 7.62}, validCountry: "Germany", scenario: "The Thirty Years' War finally ends.", note: "Münster, Germany.", continent: "Europe" },
+        { year: "1916 AD", name: "Easter Rising", center: {lat: 53.34, lon: -6.26}, validCountry: "Ireland", scenario: "An armed insurrection for Irish independence.", note: "Dublin, Ireland.", continent: "Europe" },
+        { year: "1940 AD", name: "Dunkirk Evacuation", center: {lat: 51.03, lon: 2.37}, validCountry: "France", scenario: "Allied forces are rescued by a civilian flotilla.", note: "Dunkirk, France.", continent: "Europe" },
+
+        // Global Expeditions & Colonial Events
+        { year: "1520 AD", name: "Strait of Magellan", center: {lat: -53.16, lon: -70.91}, validCountry: "Chile", scenario: "A treacherous navigable route is discovered.", note: "Punta Arenas, Chile.", continent: "South America" },
+        { year: "1488 AD", name: "Cape of Good Hope", center: {lat: -34.35, lon: 18.47}, validCountry: "South Africa", scenario: "Dias rounds the southern tip of Africa.", note: "Cape Peninsula, South Africa.", continent: "Africa" },
+        { year: "1607 AD", name: "Jamestown Settlement", center: {lat: 37.21, lon: -76.77}, validCountry: "United States", scenario: "The first permanent English settlement in the Americas.", note: "Virginia, USA.", continent: "North America" },
+        { year: "1788 AD", name: "First Fleet", center: {lat: -33.98, lon: 151.22}, validCountry: "Australia", scenario: "A penal colony is established in Botany Bay.", note: "Sydney, Australia.", continent: "Oceania" },
+        { year: "1200 AD", name: "Rapa Nui", center: {lat: -27.11, lon: -109.36}, validCountry: "Chile", scenario: "Polynesians begin carving massive Moai statues.", note: "Easter Island, Chile.", continent: "Oceania" },
+        { year: "1835 AD", name: "Voyage of the Beagle", center: {lat: -0.77, lon: -90.31}, validCountry: "Ecuador", scenario: "Charles Darwin observes unique wildlife.", note: "Galapagos Islands, Ecuador.", continent: "South America" },
+        { year: "1869 AD", name: "Golden Spike", center: {lat: 41.61, lon: -112.55}, validCountry: "United States", scenario: "The First Transcontinental Railroad is completed.", note: "Promontory, Utah, USA.", continent: "North America" },
+        { year: "1904 AD", name: "Trans-Siberian Railway", center: {lat: 43.11, lon: 131.88}, validCountry: "Russia", scenario: "The longest railway line in the world is finished.", note: "Vladivostok, Russia.", continent: "Europe/Asia" },
+        { year: "1840 AD", name: "Treaty of Waitangi", center: {lat: -35.28, lon: 174.08}, validCountry: "New Zealand", scenario: "A foundational document is signed with the Māori.", note: "Waitangi, New Zealand.", continent: "Oceania" },
+        { year: "1791 AD", name: "Discovery of Antarctica", center: {lat: -77.84, lon: 166.68}, validCountry: "New Zealand", scenario: "Early expeditions push toward the icy continent.", note: "Ross Island Base.", continent: "Antarctica" },
+
+        // 19th & 20th Century Conflicts
+        { year: "1836 AD", name: "Battle of the Alamo", center: {lat: 29.42, lon: -98.48}, validCountry: "United States", scenario: "Texian defenders hold out against Santa Anna.", note: "San Antonio, Texas, USA.", continent: "North America" },
+        { year: "1839 AD", name: "First Opium War", center: {lat: 23.12, lon: 113.26}, validCountry: "China", scenario: "A conflict over trade and sovereignty begins.", note: "Guangzhou, China.", continent: "Asia" },
+        { year: "1853 AD", name: "Crimean War", center: {lat: 44.61, lon: 33.52}, validCountry: "Ukraine", scenario: "A siege defines early modern warfare.", note: "Sevastopol, Ukraine.", continent: "Europe" },
+        { year: "1899 AD", name: "Second Boer War", center: {lat: -25.74, lon: 28.18}, validCountry: "South Africa", scenario: "Guerrilla warfare erupts over gold and independence.", note: "Pretoria, South Africa.", continent: "Africa" },
+        { year: "1915 AD", name: "Gallipoli Campaign", center: {lat: 40.24, lon: 26.27}, validCountry: "Turkey", scenario: "An amphibious assault faces fierce Ottoman defense.", note: "Gallipoli Peninsula, Turkey.", continent: "Europe/Asia" },
+        { year: "1936 AD", name: "Spanish Civil War", center: {lat: 40.41, lon: -3.70}, validCountry: "Spain", scenario: "A brutal prelude to the Second World War.", note: "Madrid, Spain.", continent: "Europe" },
+        { year: "1941 AD", name: "Pearl Harbor", center: {lat: 21.36, lon: -157.95}, validCountry: "United States", scenario: "A surprise aerial attack forces America into war.", note: "Honolulu, Hawaii, USA.", continent: "North America" },
+        { year: "1954 AD", name: "Battle of Dien Bien Phu", center: {lat: 21.38, lon: 103.01}, validCountry: "Vietnam", scenario: "French colonial rule in Indochina ends.", note: "Dien Bien Phu, Vietnam.", continent: "Asia" },
+        { year: "1959 AD", name: "Cuban Revolution", center: {lat: 23.11, lon: -82.36}, validCountry: "Cuba", scenario: "Fidel Castro overthrows the Batista government.", note: "Havana, Cuba.", continent: "North America" },
+        { year: "1975 AD", name: "Fall of Saigon", center: {lat: 10.76, lon: 106.66}, validCountry: "Vietnam", scenario: "Helicopters evacuate the embassy roof.", note: "Ho Chi Minh City, Vietnam.", continent: "Asia" }
     ];
+
+    // --- 100 LEVEL EXPANSION PACK (No-Spoiler Hints & Diverse Countries) ---
+    const expansionPack = [
+        // North America & Caribbean
+        { year: "1000 AD", name: "L'Anse aux Meadows", center: {lat: 51.59, lon: -55.53}, validCountry: "Canada", scenario: "Norse explorers establish a temporary settlement on a frozen northern coast.", note: "Newfoundland.", continent: "North America" },
+        { year: "1896 AD", name: "Klondike Gold Rush", center: {lat: 64.06, lon: -139.43}, validCountry: "Canada", scenario: "Over 100,000 prospectors migrate to a remote northwestern territory.", note: "Yukon Territory.", continent: "North America" },
+        { year: "1810 AD", name: "Cry of Dolores", center: {lat: 21.03, lon: -100.93}, validCountry: "Mexico", scenario: "A local priest rings his church bell, sparking a war for independence.", note: "Guanajuato.", continent: "North America" },
+        { year: "600 AD", name: "Palenque Flourishes", center: {lat: 17.48, lon: -92.04}, validCountry: "Mexico", scenario: "A powerful Mesoamerican city-state reaches its architectural peak.", note: "Chiapas jungle.", continent: "North America" },
+        { year: "250 AD", name: "Tikal Dominance", center: {lat: 17.22, lon: -89.62}, validCountry: "Guatemala", scenario: "A massive rainforest metropolis dominates the classical Maya period.", note: "Peten Basin.", continent: "North America" },
+        { year: "1200 BC", name: "Caracol Settlement", center: {lat: 16.76, lon: -89.11}, validCountry: "Belize", scenario: "An ancient civilization begins carving terraces into the Maya Mountains.", note: "Cayo District.", continent: "North America" },
+        { year: "426 AD", name: "Copan Dynasty", center: {lat: 14.83, lon: -89.14}, validCountry: "Honduras", scenario: "A royal dynasty is founded in a valley famous for its intricate stele sculptures.", note: "Copan River valley.", continent: "North America" },
+        { year: "590 AD", name: "Joya de Ceren", center: {lat: 13.82, lon: -89.35}, validCountry: "El Salvador", scenario: "A farming village is perfectly preserved under layers of volcanic ash.", note: "The Pompeii of the Americas.", continent: "North America" },
+        { year: "1500 BC", name: "Diquis Spheres", center: {lat: 8.90, lon: -83.33}, validCountry: "Costa Rica", scenario: "Indigenous cultures craft perfectly round stone petrospheres.", note: "Diquis Delta.", continent: "North America" },
+        { year: "1692 AD", name: "Port Royal Earthquake", center: {lat: 17.93, lon: -76.84}, validCountry: "Jamaica", scenario: "A notorious pirate haven sinks into the sea after a massive tremor.", note: "Caribbean Sea.", continent: "North America" },
+        { year: "1493 AD", name: "La Isabela Founded", center: {lat: 19.88, lon: -71.08}, validCountry: "Dominican Republic", scenario: "The first permanent European settlement in the Americas is established.", note: "Hispaniola.", continent: "North America" },
+        { year: "1492 AD", name: "Guanahani Landfall", center: {lat: 24.03, lon: -74.48}, validCountry: "Bahamas", scenario: "Three European ships make first contact with the Lucayan people.", note: "San Salvador Island.", continent: "North America" },
+
+        // South America
+        { year: "1911 AD", name: "Discovery of Machu Picchu", center: {lat: -13.16, lon: -72.54}, validCountry: "Peru", scenario: "An explorer reveals an intact, high-altitude citadel to the outside world.", note: "Andes Mountains.", continent: "South America" },
+        { year: "1545 AD", name: "Cerro Rico Silver", center: {lat: -19.61, lon: -65.75}, validCountry: "Bolivia", scenario: "A massive silver vein is discovered, changing the global economy forever.", note: "Potosi.", continent: "South America" },
+        { year: "1538 AD", name: "Battle of Las Salinas", center: {lat: -13.54, lon: -71.96}, validCountry: "Peru", scenario: "Conquistadors fight a bloody civil war amongst themselves over territorial rights.", note: "Cusco.", continent: "South America" },
+        { year: "1960 AD", name: "Valdivia Earthquake", center: {lat: -39.81, lon: -73.24}, validCountry: "Chile", scenario: "The most powerful earthquake ever recorded by instruments strikes the coast.", note: "Magnitude 9.5.", continent: "South America" },
+        { year: "1533 AD", name: "Ransom Room", center: {lat: -7.16, lon: -78.51}, validCountry: "Peru", scenario: "An emperor offers a room full of gold and two of silver for his life.", note: "Cajamarca.", continent: "South America" },
+        { year: "1822 AD", name: "Battle of Pichincha", center: {lat: -0.19, lon: -78.52}, validCountry: "Ecuador", scenario: "Rebel forces secure independence on the slopes of a stratovolcano.", note: "Near Quito.", continent: "South America" },
+        { year: "1536 AD", name: "Muisca Conquest", center: {lat: 4.60, lon: -74.08}, validCountry: "Colombia", scenario: "Explorers searching for a legendary golden king conquer a highland confederation.", note: "Altiplano Cundiboyacense.", continent: "South America" },
+        { year: "1978 AD", name: "Jonestown Tragedy", center: {lat: 7.76, lon: -59.89}, validCountry: "Guyana", scenario: "An isolated jungle commune ends in a horrific mass casualty event.", note: "South American jungle.", continent: "South America" },
+        { year: "1630 AD", name: "Dutch Invasion of Olinda", center: {lat: -8.01, lon: -34.85}, validCountry: "Brazil", scenario: "A European trading company captures a wealthy sugar-producing region.", note: "Pernambuco.", continent: "South America" },
+
+        // Europe (Expanding out of the major powers)
+        { year: "872 AD", name: "Battle of Hafrsfjord", center: {lat: 58.93, lon: 5.66}, validCountry: "Norway", scenario: "A naval battle results in the unification of a coastal, mountainous kingdom.", note: "Western fjords.", continent: "Europe" },
+        { year: "930 AD", name: "Althing Established", center: {lat: 64.25, lon: -21.11}, validCountry: "Iceland", scenario: "The oldest surviving parliament in the world convenes in a rift valley.", note: "Thingvellir.", continent: "Europe" },
+        { year: "1939 AD", name: "Winter War", center: {lat: 60.98, lon: 29.38}, validCountry: "Finland", scenario: "Outnumbered ski troops hold off a massive invasion in freezing temperatures.", note: "Karelian Isthmus.", continent: "Europe" },
+        { year: "965 AD", name: "Jelling Stones", center: {lat: 55.75, lon: 9.41}, validCountry: "Denmark", scenario: "A king raises massive runestones to announce his realm's conversion to Christianity.", note: "Jutland peninsula.", continent: "Europe" },
+        { year: "1989 AD", name: "Baltic Way", center: {lat: 56.94, lon: 24.10}, validCountry: "Latvia", scenario: "Two million people join hands to form a human chain across three nations.", note: "Central capital.", continent: "Europe" },
+        { year: "1831 AD", name: "Hill of Crosses", center: {lat: 56.01, lon: 23.32}, validCountry: "Lithuania", scenario: "Citizens begin secretly placing religious symbols on a hill in quiet defiance of an empire.", note: "Siauliai.", continent: "Europe" },
+        { year: "1291 AD", name: "Rütli Oath", center: {lat: 46.96, lon: 8.59}, validCountry: "Switzerland", scenario: "Three alpine cantons swear an oath of mutual defense, forming a lasting confederacy.", note: "Lake Lucerne.", continent: "Europe" },
+        { year: "1683 AD", name: "Siege of Vienna", center: {lat: 48.20, lon: 16.37}, validCountry: "Austria", scenario: "The largest cavalry charge in history breaks the siege of a central European capital.", note: "Kahlenberg.", continent: "Europe" },
+        { year: "1993 AD", name: "Velvet Divorce", center: {lat: 48.14, lon: 17.10}, validCountry: "Slovakia", scenario: "A nation peacefully splits into two separate sovereign states.", note: "Bratislava.", continent: "Europe" },
+        { year: "1358 AD", name: "Republic of Ragusa", center: {lat: 42.65, lon: 18.09}, validCountry: "Croatia", scenario: "A heavily fortified maritime republic secures its independence.", note: "Adriatic coast.", continent: "Europe" },
+        { year: "480 BC", name: "Battle of Thermopylae", center: {lat: 38.79, lon: 22.53}, validCountry: "Greece", scenario: "A small coalition of hoplites holds a narrow coastal pass against a massive invading army.", note: "The Hot Gates.", continent: "Europe" },
+        { year: "1974 AD", name: "Green Line Established", center: {lat: 35.18, lon: 33.38}, validCountry: "Cyprus", scenario: "A capital city is divided by a buffer zone following a military intervention.", note: "Mediterranean island.", continent: "Europe" },
+        { year: "1755 AD", name: "Great Earthquake", center: {lat: 38.72, lon: -9.13}, validCountry: "Portugal", scenario: "A massive tremor, tsunami, and fires completely devastate a colonial capital on All Saints' Day.", note: "Atlantic coast.", continent: "Europe" },
+        { year: "1637 AD", name: "Tulip Mania Collapses", center: {lat: 52.36, lon: 4.90}, validCountry: "Netherlands", scenario: "The first recorded speculative economic bubble bursts spectacularly.", note: "Low Countries.", continent: "Europe" },
+        { year: "1915 AD", name: "Second Battle of Ypres", center: {lat: 50.85, lon: 2.88}, validCountry: "Belgium", scenario: "Poison gas is used for the first time on a mass scale in trench warfare.", note: "Flanders fields.", continent: "Europe" },
+        { year: "1922 AD", name: "March on Rome", center: {lat: 41.90, lon: 12.49}, validCountry: "Italy", scenario: "Paramilitary 'Blackshirts' march on the capital, forcing a change in government.", note: "The peninsula.", continent: "Europe" },
+        { year: "1995 AD", name: "Dayton Agreement", center: {lat: 43.85, lon: 18.41}, validCountry: "Bosnia and Herzegovina", scenario: "A peace agreement officially ends a brutal three-and-a-half-year conflict in the Balkans.", note: "The capital city.", continent: "Europe" },
+
+        // Middle East & Central Asia
+        { year: "1932 AD", name: "Unification of the Kingdom", center: {lat: 24.71, lon: 46.67}, validCountry: "Saudi Arabia", scenario: "A monarch formally unites dual kingdoms into a single desert state.", note: "Arabian Peninsula.", continent: "Asia" },
+        { year: "570 AD", name: "Collapse of Marib Dam", center: {lat: 15.40, lon: 45.32}, validCountry: "Yemen", scenario: "An ancient engineering marvel fails, causing mass migration out of a southern kingdom.", note: "Sabaean Kingdom.", continent: "Asia" },
+        { year: "1650 AD", name: "Expulsion of the Portuguese", center: {lat: 23.58, lon: 58.40}, validCountry: "Oman", scenario: "Local forces drive European colonizers out of their strategic coastal capital.", note: "Gulf of Oman.", continent: "Asia" },
+        { year: "1971 AD", name: "Trucial States Unite", center: {lat: 24.45, lon: 54.37}, validCountry: "United Arab Emirates", scenario: "Several coastal emirates formally agree to form a single federation.", note: "Persian Gulf coast.", continent: "Asia" },
+        { year: "270 AD", name: "Zenobia's Rebellion", center: {lat: 34.55, lon: 38.26}, validCountry: "Syria", scenario: "A warrior queen declares independence from a massive western empire.", note: "Palmyra oasis.", continent: "Asia" },
+        { year: "1200 BC", name: "Phoenician Alphabet", center: {lat: 34.12, lon: 35.64}, validCountry: "Lebanon", scenario: "A maritime trading culture develops the first widely used phonemic alphabet.", note: "Byblos.", continent: "Asia" },
+        { year: "1370 AD", name: "Timur's Capital", center: {lat: 39.62, lon: 66.97}, validCountry: "Uzbekistan", scenario: "A legendary conqueror establishes a glittering capital on the Silk Road.", note: "Samarkand.", continent: "Asia" },
+        { year: "1221 AD", name: "Destruction of Merv", center: {lat: 37.66, lon: 62.19}, validCountry: "Turkmenistan", scenario: "A massive oasis city is entirely eradicated by an invading nomadic horde.", note: "Karakum Desert.", continent: "Asia" },
+        { year: "3500 BC", name: "Botai Horse Domestication", center: {lat: 53.19, lon: 67.68}, validCountry: "Kazakhstan", scenario: "Evidence suggests the earliest known domestication of wild horses occurs here.", note: "Eurasian Steppe.", continent: "Asia" },
+        { year: "1500 AD", name: "Tash Rabat Caravanserai", center: {lat: 40.82, lon: 75.28}, validCountry: "Kyrgyzstan", scenario: "A well-preserved stone inn provides shelter for merchants crossing the high mountains.", note: "Tian Shan mountains.", continent: "Asia" },
+        { year: "301 AD", name: "Conversion of the Kingdom", center: {lat: 40.16, lon: 44.29}, validCountry: "Armenia", scenario: "A nation becomes the first in the world to adopt Christianity as its state religion.", note: "Caucasus region.", continent: "Asia" },
+        { year: "1184 AD", name: "Reign of King Tamar", center: {lat: 41.71, lon: 44.82}, validCountry: "Georgia", scenario: "A female monarch oversees the apex of her kingdom's golden age.", note: "Tbilisi.", continent: "Asia" },
+        { year: "1872 AD", name: "First Oil Boom", center: {lat: 40.40, lon: 49.86}, validCountry: "Azerbaijan", scenario: "The first mechanically drilled oil well sparks a massive industrial rush.", note: "Caspian Sea coast.", continent: "Asia" },
+
+        // Africa (Deep History & Pre-Colonial)
+        { year: "859 AD", name: "University of al-Qarawiyyin", center: {lat: 34.03, lon: -4.97}, validCountry: "Morocco", scenario: "The oldest continually operating, degree-granting university in the world is founded by a woman.", note: "Fez.", continent: "Africa" },
+        { year: "6000 BC", name: "Tassili n'Ajjer Art", center: {lat: 25.10, lon: 8.12}, validCountry: "Algeria", scenario: "Prehistoric rock paintings depict a lush, green Sahara with grazing cattle.", note: "Deep Sahara desert.", continent: "Africa" },
+        { year: "670 AD", name: "Founding of Kairouan", center: {lat: 35.67, lon: 10.10}, validCountry: "Tunisia", scenario: "A major center of Islamic scholarship is established in the Maghreb.", note: "Northern coast.", continent: "Africa" },
+        { year: "200 AD", name: "Leptis Magna Expansion", center: {lat: 32.63, lon: 14.29}, validCountry: "Libya", scenario: "An emperor expands his North African birthplace into a majestic port city.", note: "Mediterranean coast.", continent: "Africa" },
+        { year: "1444 AD", name: "Gorée Island Post", center: {lat: 14.66, lon: -17.39}, validCountry: "Senegal", scenario: "A small island becomes a heavily contested port in the transatlantic trade network.", note: "Off the westernmost peninsula.", continent: "Africa" },
+        { year: "1897 AD", name: "Sack of Benin City", center: {lat: 6.33, lon: 5.62}, validCountry: "Nigeria", scenario: "A punitive expedition burns a kingdom and loots thousands of intricate bronze plaques.", note: "West Africa.", continent: "Africa" },
+        { year: "1400 AD", name: "Swahili Coast Trade", center: {lat: -2.26, lon: 40.90}, validCountry: "Kenya", scenario: "A thriving coral-stone city-state trades spices and ivory across the Indian Ocean.", note: "Lamu Archipelago.", continent: "Africa" },
+        { year: "1200 AD", name: "Rock-Hewn Churches", center: {lat: 12.03, lon: 39.04}, validCountry: "Ethiopia", scenario: "A king orders the carving of massive monolithic churches directly into the bedrock.", note: "Lalibela.", continent: "Africa" },
+        { year: "1470 BC", name: "Expedition to Punt", center: {lat: 10.00, lon: 49.00}, validCountry: "Somalia", scenario: "A northern queen sends a trading fleet to the 'Land of the Gods' for frankincense.", note: "Horn of Africa.", continent: "Africa" },
+        { year: "1300 AD", name: "Buganda Kingdom Ascends", center: {lat: 0.34, lon: 32.58}, validCountry: "Uganda", scenario: "A powerful kingdom consolidates control over the region north of a massive lake.", note: "Lake Victoria region.", continent: "Africa" },
+        { year: "1810 AD", name: "Merina Unification", center: {lat: -18.87, lon: 47.50}, validCountry: "Madagascar", scenario: "A monarch successfully unites the diverse factions of a massive island.", note: "Antananarivo.", continent: "Africa" },
+        { year: "1624 AD", name: "Queen Nzinga's Reign", center: {lat: -8.83, lon: 13.28}, validCountry: "Angola", scenario: "A brilliant diplomat and military tactician fiercely resists European slave traders.", note: "Ndongo and Matamba kingdoms.", continent: "Africa" },
+        { year: "1430 AD", name: "Mutapa Empire", center: {lat: -16.80, lon: 31.50}, validCountry: "Zimbabwe", scenario: "A powerful warrior-king establishes a vast realm built on gold mining and trade.", note: "Southern Africa.", continent: "Africa" },
+        { year: "1855 AD", name: "Mosi-oa-Tunya Recorded", center: {lat: -17.92, lon: 25.85}, validCountry: "Zambia", scenario: "An explorer becomes the first European to document 'The Smoke That Thunders'.", note: "Zambezi River.", continent: "Africa" },
+        { year: "1000 AD", name: "Tsodilo Hills Art", center: {lat: -18.76, lon: 21.74}, validCountry: "Botswana", scenario: "Over 4,500 rock paintings are created in the 'Louvre of the Desert'.", note: "Kalahari Desert.", continent: "Africa" },
+        { year: "1904 AD", name: "Herero Uprising", center: {lat: -22.56, lon: 17.06}, validCountry: "Namibia", scenario: "Indigenous pastoralists rebel against colonial rule, resulting in a tragic genocide.", note: "Southwest Africa.", continent: "Africa" },
+
+        // Asia & Oceania
+        { year: "1400 AD", name: "Malacca Sultanate", center: {lat: 2.18, lon: 102.25}, validCountry: "Malaysia", scenario: "A strategic port city becomes the dominant power controlling the main east-west sea route.", note: "Strait of Malacca.", continent: "Asia" },
+        { year: "1975 AD", name: "Fall of Phnom Penh", center: {lat: 11.55, lon: 104.92}, validCountry: "Cambodia", scenario: "Radical agrarian insurgents capture the capital, emptying the city's population.", note: "Indochina.", continent: "Asia" },
+        { year: "1353 AD", name: "Lan Xang Founded", center: {lat: 19.88, lon: 102.13}, validCountry: "Laos", scenario: "The 'Kingdom of a Million Elephants' is established along a mighty river.", note: "Mekong River valley.", continent: "Asia" },
+        { year: "7000 BC", name: "Kuk Swamp Agriculture", center: {lat: -5.78, lon: 144.33}, validCountry: "Papua New Guinea", scenario: "Evidence reveals some of the earliest independent development of agriculture in the world.", note: "Highland valleys.", continent: "Oceania" },
+        { year: "1874 AD", name: "Deed of Cession", center: {lat: -18.14, lon: 178.43}, validCountry: "Fiji", scenario: "High chiefs formally cede their island nation to a distant colonial empire.", note: "South Pacific archipelago.", continent: "Oceania" },
+        { year: "477 AD", name: "Sigiriya Rock Fortress", center: {lat: 7.95, lon: 80.76}, validCountry: "Sri Lanka", scenario: "A rogue king builds a massive palace on top of a 200-meter-high column of rock.", note: "Lion Rock.", continent: "Asia" },
+        { year: "623 BC", name: "Birth of Siddhartha", center: {lat: 27.48, lon: 83.27}, validCountry: "Nepal", scenario: "A prince who will eventually found a major world religion is born in a sacred garden.", note: "Lumbini.", continent: "Asia" },
+        { year: "1616 AD", name: "Unification of the Dragon", center: {lat: 27.47, lon: 89.64}, validCountry: "Bhutan", scenario: "A fleeing lama arrives in the high mountains and unifies the region into a single state.", note: "Himalayan kingdom.", continent: "Asia" },
+        { year: "1220 AD", name: "Karakorum Established", center: {lat: 47.19, lon: 102.84}, validCountry: "Mongolia", scenario: "A massive nomadic empire selects a site for its new permanent capital city.", note: "Orkhon Valley.", continent: "Asia" },
+        { year: "1521 AD", name: "Golden Age of the Sultanate", center: {lat: 4.89, lon: 114.94}, validCountry: "Brunei", scenario: "A wealthy thalassocracy reaches its peak, controlling a massive northern coastline.", note: "Borneo.", continent: "Asia" },
+        { year: "1443 AD", name: "Creation of Hangul", center: {lat: 37.56, lon: 126.97}, validCountry: "South Korea", scenario: "A beloved king personally oversees the creation of a brilliantly logical, phonetic alphabet.", note: "Joseon Dynasty.", continent: "Asia" },
+        { year: "1624 AD", name: "Fort Zeelandia Built", center: {lat: 23.00, lon: 120.16}, validCountry: "Taiwan", scenario: "A European trading company builds a stronghold on a large island off the mainland coast.", note: "Tainan.", continent: "Asia" },
+        
+        // Global Deep Cuts (To round out 100)
+        { year: "1980 AD", name: "Independence Declared", center: {lat: -17.82, lon: 31.04}, validCountry: "Zimbabwe", scenario: "A nation formerly known as Rhodesia officially becomes an independent republic.", note: "Southern Africa.", continent: "Africa" },
+        { year: "1821 AD", name: "Battle of Carabobo", center: {lat: 10.03, lon: -68.01}, validCountry: "Venezuela", scenario: "A decisive victory secures the independence of the northern tip of South America.", note: "Led by Simon Bolivar.", continent: "South America" },
+        { year: "1893 AD", name: "Women's Suffrage Granted", center: {lat: -41.28, lon: 174.77}, validCountry: "New Zealand", scenario: "An island nation becomes the first self-governing country to give women the right to vote.", note: "Wellington.", continent: "Oceania" },
+        { year: "1571 AD", name: "Battle of Lepanto", center: {lat: 38.38, lon: 21.73}, validCountry: "Greece", scenario: "A massive fleet of rowing galleys clashes in the last major naval battle of its kind.", note: "Ionian Sea.", continent: "Europe" },
+        { year: "1935 AD", name: "Long March Ends", center: {lat: 36.56, lon: 109.48}, validCountry: "China", scenario: "A brutal, year-long military retreat secures the survival of a political movement.", note: "Shaanxi province.", continent: "Asia" },
+        { year: "1804 AD", name: "First Empire Declared", center: {lat: 18.53, lon: -72.33}, validCountry: "Haiti", scenario: "A newly free nation changes its name back to the indigenous Taino word for the island.", note: "Port-au-Prince.", continent: "North America" },
+        { year: "1258 AD", name: "Siege of the Capital", center: {lat: 33.31, lon: 44.36}, validCountry: "Iraq", scenario: "An invading horde throws so many books into the river that the water runs black with ink.", note: "Abbasid Caliphate.", continent: "Asia" },
+        { year: "1692 AD", name: "Witch Trials Begin", center: {lat: 42.51, lon: -70.89}, validCountry: "United States", scenario: "Mass hysteria grips a colonial village, leading to a series of infamous hearings.", note: "Massachusetts.", continent: "North America" },
+        { year: "1588 AD", name: "Armada Defeated", center: {lat: 50.15, lon: -4.13}, validCountry: "United Kingdom", scenario: "A massive invasion fleet is scattered by nimble defenders and terrible weather.", note: "English Channel.", continent: "Europe" },
+        { year: "1868 AD", name: "Boshin War", center: {lat: 35.01, lon: 135.76}, validCountry: "Japan", scenario: "Forces loyal to the Emperor clash with those loyal to the Shogunate.", note: "Kyoto.", continent: "Asia" },
+        { year: "1914 AD", name: "Battle of the Marne", center: {lat: 48.95, lon: 2.88}, validCountry: "France", scenario: "A desperate counter-attack utilizing city taxis halts a massive invasion.", note: "Just outside the capital.", continent: "Europe" },
+        { year: "1989 AD", name: "Square Protests", center: {lat: 39.90, lon: 116.39}, validCountry: "China", scenario: "A massive student-led demonstration is violently suppressed in the capital.", note: "East Asia.", continent: "Asia" },
+        { year: "1999 AD", name: "Canal Handover", center: {lat: 8.98, lon: -79.52}, validCountry: "Panama", scenario: "A superpower formally transfers control of a vital global waterway back to the host nation.", note: "Central America.", continent: "North America" },
+        { year: "1066 AD", name: "Battle of Stamford Bridge", center: {lat: 53.98, lon: -0.91}, validCountry: "United Kingdom", scenario: "A king rushes north to defeat a Viking invasion, just days before another invasion hits the south.", note: "Yorkshire.", continent: "Europe" },
+        { year: "1814 AD", name: "Burning of the Capital", center: {lat: 38.89, lon: -77.03}, validCountry: "United States", scenario: "Invading forces set fire to the executive mansion and legislature buildings.", note: "The War of 1812.", continent: "North America" },
+        { year: "1955 AD", name: "Bus Boycott", center: {lat: 32.37, lon: -86.30}, validCountry: "United States", scenario: "A localized protest against transit segregation sparks a massive civil rights movement.", note: "Alabama.", continent: "North America" },
+        { year: "1347 AD", name: "Arrival of the Plague", center: {lat: 38.11, lon: 13.36}, validCountry: "Italy", scenario: "Trade ships arrive in port carrying a devastating illness that will reshape a continent.", note: "Sicily.", continent: "Europe" },
+        { year: "1885 AD", name: "Conference Maps Drawn", center: {lat: 52.52, lon: 13.40}, validCountry: "Germany", scenario: "European powers convene to arbitrarily divide a massive continent into colonial spheres.", note: "The Scramble for Africa.", continent: "Europe" },
+        { year: "1917 AD", name: "Halifax Explosion", center: {lat: 44.66, lon: -63.59}, validCountry: "Canada", scenario: "Two ships collide in a harbor, causing the largest man-made explosion prior to nuclear weapons.", note: "Nova Scotia.", continent: "North America" },
+        { year: "1940 AD", name: "Cave Art Discovered", center: {lat: 45.05, lon: 1.16}, validCountry: "France", scenario: "Teenagers chasing a dog discover a complex of caves filled with Paleolithic paintings.", note: "Dordogne region.", continent: "Europe" },
+        { year: "1756 AD", name: "Black Hole Incident", center: {lat: 22.57, lon: 88.36}, validCountry: "India", scenario: "Prisoners of war are held in a suffocatingly small dungeon after the fall of a local fort.", note: "Calcutta.", continent: "Asia" },
+        { year: "1973 AD", name: "Opera House Opens", center: {lat: -33.85, lon: 151.21}, validCountry: "Australia", scenario: "A highly iconic, sail-shaped performing arts center is officially inaugurated.", note: "Sydney Harbour.", continent: "Oceania" },
+        { year: "1890 AD", name: "Wounded Knee", center: {lat: 43.14, lon: -102.36}, validCountry: "United States", scenario: "A tragic massacre marks the end of the major Indian Wars on the plains.", note: "South Dakota.", continent: "North America" },
+        { year: "1968 AD", name: "Spring Uprising", center: {lat: 50.07, lon: 14.43}, validCountry: "Czech Republic", scenario: "A brief period of political liberalization is crushed by an invading coalition of tanks.", note: "Eastern Bloc.", continent: "Europe" },
+        { year: "1531 AD", name: "Apparition on the Hill", center: {lat: 19.48, lon: -99.11}, validCountry: "Mexico", scenario: "An indigenous peasant reports a miraculous vision, deeply impacting regional religion.", note: "Tepeyac Hill.", continent: "North America" }
+    ];
+
+    dailyLevels = dailyLevels.concat(expansionPack);
 
     // --- STORY TRANSMISSION DATA ---
     const storyBeats = {
@@ -574,6 +846,7 @@
 
     // GAME STATE
     let dailyGuessCount = 0; // Tracks guesses in the current daily run
+    let levelGuessCount = 0; // Tracks guesses for the current active level
     let defaultStats = { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0, '6+':0} };
     let currentMode = null; 
     let currentLevelIdx = 0;
@@ -659,10 +932,11 @@
 
     function triggerWin() {
         sfx.win();
+        winShower(currentMode === 'daily' && dailyGuessCount === 1);
         const today = new Date().toISOString().slice(0, 10);
         
         if (currentMode === 'story') {
-            health += 15; 
+            health += 10; 
             if (health > 100) health = 100;
             updateHealthUI();
             
@@ -735,6 +1009,9 @@
         document.getElementById('btnAbility1').disabled = false;
         document.getElementById('btnAbility2').disabled = false;
         document.querySelectorAll('.blip').forEach(b => b.remove());
+        
+        levelGuessCount = 0;
+        input.focus(); // Snaps the cursor back instantly
     }
 
     function updateBackground(yearStr) {
@@ -758,11 +1035,13 @@
     }
 
     // STORY MODAL LOGIC
-    function showStory(idx) {
+   function showStory(idx) {
         const beat = storyBeats[idx];
         document.getElementById('storySender').innerText = beat.sender;
         document.getElementById('storyTitle').innerText = beat.title;
-        document.getElementById('storyMsg').innerHTML = beat.msg;
+        
+        const msgContainer = document.getElementById('storyMsg');
+        msgContainer.innerHTML = ""; // Clear old text
         
         if (beat.sender !== "COMMAND") {
             document.getElementById('storySender').style.color = "var(--danger)";
@@ -773,6 +1052,28 @@
         }
 
         document.getElementById('storyModal').style.display = 'flex';
+
+        // TYPEWRITER EFFECT
+        let i = 0;
+        const speed = 20; // milliseconds per letter
+        const textToType = beat.msg;
+        
+        function typeWriter() {
+            if (i < textToType.length) {
+                // Quick hack to handle HTML breaks <br>
+                if (textToType.charAt(i) === '<') {
+                    let tag = "";
+                    while (textToType.charAt(i) !== '>' && i < textToType.length) { tag += textToType.charAt(i); i++; }
+                    tag += '>';
+                    msgContainer.innerHTML += tag;
+                } else {
+                    msgContainer.innerHTML += textToType.charAt(i);
+                }
+                i++;
+                setTimeout(typeWriter, speed);
+            }
+        }
+        setTimeout(typeWriter, 300); // Slight delay before typing starts
     }
 
     function closeStory() {
@@ -815,11 +1116,12 @@
             setTimeout(() => input.style.borderColor = "transparent", 400);
             return;
         }
-
+        levelGuessCount++;
         if (currentMode === 'daily') dailyGuessCount++;
 
         sfx.scan();
         input.value = '';
+        input.focus(); // Snaps the cursor back instantly
         document.getElementById('suggestions').style.display = 'none';
 
         const target = currentLevelList[currentLevelIdx].center;
@@ -837,21 +1139,28 @@
 
         let damage = 0;
         if (!win) {
-            if (dist > 10000) damage = 15;
-            else if (dist > 5000) damage = 10;
-            else if (dist > 2000) damage = 5;
+            // THE NEW BRUTAL SCALING
+            if (dist > 10000) damage = 25;       // Completely lost (Max 4 guesses)
+            else if (dist > 5000) damage = 15;   // Wrong continent
+            else if (dist > 2000) damage = 10;   // Wrong region
+            else damage = 5;                     // Close, but no free passes. Spamming hurts.
+            
             health -= damage;
+            // NEW: VISCERAL SCREEN SHAKE
+            document.body.classList.add('taking-damage');
+            setTimeout(() => document.body.classList.remove('taking-damage'), 400);
+
             if (health <= 0) { health = 0; triggerLoss(); }
         }
 
         // ADD THIS EMOJI TRACKER
         if (currentMode === 'daily') {
-            if (win) dailyGuessHistory.push('🟩');
+            if (win && dailyGuessCount === 1) dailyGuessHistory.push('🌟'); // THE GOLDEN RUN
+            else if (win) dailyGuessHistory.push('🟩');
             else if (dist < 800) dailyGuessHistory.push('🟧');
             else if (dist < 2500) dailyGuessHistory.push('🟨');
             else dailyGuessHistory.push('⬛️');
         }
-
         updateHealthUI();
 
         addLogEntry(country.name, Math.round(dist), win);
@@ -899,7 +1208,7 @@
         if (win) distText = "TARGET FOUND";
         else if (dist < 800) distText = "CLOSE - CHECK BORDERS";
         
-        div.innerHTML = `<span class="log-name">${name}</span><span class="log-dist">${distText}</span>`;
+        div.innerHTML = `<span class="log-name"><span style="color:var(--text-muted); font-size:0.75rem; margin-right:8px;">#${levelGuessCount}</span>${name}</span><span class="log-dist">${distText}</span>`;
         document.getElementById('logList').prepend(div);
     }
 
@@ -907,6 +1216,9 @@
         const radar = document.getElementById('radarScreen');
         const blip = document.createElement('div');
         blip.className = 'blip';
+        // Remove 'latest' class from older blips
+        document.querySelectorAll('.blip.latest').forEach(b => b.classList.remove('latest'));
+        blip.classList.add('latest'); // Make this new one pulse
         let r = (dist / 15000) * 50; if (r > 48) r = 48;
         if(win) blip.style.background = "var(--success)";
         else if(dist < 800) blip.style.background = "var(--accent)";
@@ -921,9 +1233,14 @@
     function updateRadarReadout(bearing, dist) {
         const directions = ["North", "NE", "East", "SE", "South", "SW", "West", "NW"];
         const index = Math.round(((bearing %= 360) < 0 ? bearing + 360 : bearing) / 45) % 8;
+        
         let text = `Target is ${directions[index]}`;
         if (dist < 2000) text += " (Close!)";
+        
         document.getElementById('radarReadout').innerText = text;
+        
+        // Spin the compass needle
+        document.getElementById('compassArrow').style.transform = `rotate(${bearing}deg)`;
     }
 
     function startTimer() {
@@ -980,19 +1297,27 @@
         let stats = loadStats();
         stats.played += 1;
         
+        // Ensure trophies object exists for older saves
+        if (!stats.trophies) stats.trophies = { sniper: false, clutch: false, veteran: false, scholar: false };
+
         if (isWin) {
             stats.wins += 1;
             stats.currentStreak += 1;
             if (stats.currentStreak > stats.maxStreak) stats.maxStreak = stats.currentStreak;
             
-            // BULLETPROOFING: Ensure minimum guess is 1, max is 6+
             let validCount = Math.max(1, dailyGuessCount);
             let bucket = validCount >= 6 ? '6+' : validCount.toString();
-            
             stats.distribution[bucket] += 1;
+
+            // CHECK TROPHY UNLOCKS
+            if (validCount === 1) stats.trophies.sniper = true;
+            if (health < 10) stats.trophies.clutch = true;
+            if (stats.currentStreak >= 7) stats.trophies.veteran = true;
         } else {
             stats.currentStreak = 0;
         }
+        
+        if (stats.played >= 30) stats.trophies.scholar = true;
         
         localStorage.setItem('temporle_stats', JSON.stringify(stats));
         setTimeout(() => showStats(dailyGuessCount), 1500); 
@@ -1009,6 +1334,15 @@
         document.getElementById('statStreak').innerText = stats.currentStreak;
         document.getElementById('statMax').innerText = stats.maxStreak;
         
+        let rank = "Trainee";
+        if (stats.currentStreak >= 3) rank = "Agent";
+        if (stats.currentStreak >= 7) rank = "Specialist";
+        if (stats.currentStreak >= 14) rank = "Chronomancer";
+        if (stats.currentStreak >= 30) rank = "Time Lord";
+        
+        // Sneak the rank under the current streak label
+        document.querySelector('#statStreak').nextElementSibling.innerHTML = `Current<br>Streak<br><span style="color:var(--primary); font-size: 0.55rem;">${rank}</span>`;
+
         // Build Distribution Chart
         const chart = document.getElementById('distChart');
         chart.innerHTML = '';
@@ -1036,6 +1370,13 @@
             `;
             chart.appendChild(row);
         });
+        // Render Trophies
+        if (stats.trophies) {
+            if (stats.trophies.sniper) document.getElementById('trophySniper').classList.add('unlocked');
+            if (stats.trophies.clutch) document.getElementById('trophyClutch').classList.add('unlocked');
+            if (stats.trophies.veteran) document.getElementById('trophyVeteran').classList.add('unlocked');
+            if (stats.trophies.scholar) document.getElementById('trophyScholar').classList.add('unlocked');
+        }
 
         document.getElementById('statsModal').style.display = 'flex';
     }
@@ -1051,42 +1392,52 @@
         }
         
         const status = won ? health + "%" : "Collapsed";
-        const shareText = `Temporle - ${today} ⏳\n${grid.trim()}\nIntegrity: ${status}\nPlay at: yourwebsite.com`; // Add your actual URL here!
+        
+        // Includes your full URL so messaging apps automatically hyperlink it
+        const shareText = `Temporle - ${today} ⏳\n${grid.trim()}\nIntegrity: ${status}\nPlay at: https://owenschock.github.io/temporle/`; 
         
         localStorage.setItem('temporle_share_' + today, shareText);
     }
 
-    // --- SHARE EMOJI LOGIC ---
-    function shareResult() {
+    function shareResult(btnElement) {
         const today = new Date().toISOString().slice(0, 10);
         const text = localStorage.getItem('temporle_share_' + today);
         
         if (!text) return;
 
+        // Visual Feedback Function
+        const triggerFeedback = () => {
+            const originalText = btnElement.innerText;
+            const originalBg = btnElement.style.background;
+            
+            btnElement.innerText = "Copied! ✅";
+            btnElement.style.background = "#059669"; // Darker green
+            
+            setTimeout(() => {
+                btnElement.innerText = originalText;
+                btnElement.style.background = originalBg;
+            }, 2000);
+        };
+
         // Modern approach (Works on HTTPS like GitHub Pages)
         if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(text).then(showToast);
+            navigator.clipboard.writeText(text).then(triggerFeedback);
         } else {
             // Fallback approach (Works on local file:/// testing)
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            
-            // Hide the text area off-screen
             textArea.style.position = "fixed";
             textArea.style.left = "-999999px";
-            textArea.style.top = "-999999px";
             document.body.appendChild(textArea);
-            
             textArea.focus();
             textArea.select();
             
             try {
                 document.execCommand('copy');
-                showToast();
+                triggerFeedback();
             } catch (err) {
                 console.error('Clipboard fallback failed', err);
             }
-            
             document.body.removeChild(textArea);
         }
     }
@@ -1106,6 +1457,52 @@
         const container = document.getElementById(elementId);
         container.innerHTML = debriefHTML;
         container.classList.remove('hidden');
+    }
+
+    // --- TAB ABANDONMENT HOOK ---
+    let originalTitle = document.title;
+    window.addEventListener('blur', () => { 
+        if (!gameOver) document.title = "⏳ Timeline Unstable!"; 
+    });
+    window.addEventListener('focus', () => { 
+        document.title = originalTitle; 
+    });
+
+    // --- PRO HOTKEYS ---
+    document.addEventListener('keydown', (e) => {
+        // Don't trigger if they are actively typing a country name!
+        if (e.target.tagName === 'INPUT') return; 
+        
+        if (e.key === '1') document.getElementById('btnAbility1').click();
+        if (e.key === '2') document.getElementById('btnAbility2').click();
+    });
+
+    // --- VICTORY SHOWER ---
+    function winShower(isGolden) {
+        const emoji = isGolden ? '🌟' : '🟩';
+        for(let i = 0; i < 40; i++) {
+            let drop = document.createElement('div');
+            drop.innerText = emoji;
+            drop.style.position = 'fixed';
+            drop.style.left = Math.random() * 100 + 'vw';
+            drop.style.top = '-50px';
+            drop.style.fontSize = (Math.random() * 20 + 10) + 'px';
+            drop.style.zIndex = '9999';
+            drop.style.pointerEvents = 'none';
+            drop.style.transition = 'top 2s linear, transform 2s ease-in-out';
+            document.body.appendChild(drop);
+            
+            setTimeout(() => {
+                drop.style.top = '120vh';
+                drop.style.transform = `rotate(${Math.random() * 360}deg)`;
+            }, 50); // Start falling
+            
+            setTimeout(() => drop.remove(), 2000); // Cleanup
+        }
+    }
+    function closeStats() {
+        document.getElementById('statsModal').style.display = 'none';
+        if (!gameOver) document.getElementById('countryInput').focus();
     }
 </script>
 </body>
