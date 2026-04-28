@@ -99,7 +99,32 @@
 
         /* GRID */
         .game-grid { display: grid; grid-template-columns: 1fr 340px; gap: 30px; height: 100%; }
-        @media (max-width: 850px) { .game-grid { grid-template-columns: 1fr; } .radar-column { display: none; } }
+        /* --- MOBILE OPTIMIZATION --- */
+        @media (max-width: 850px) {
+            body { padding: 10px; }
+            .container { padding: 15px; border-radius: 16px; min-height: auto; }
+
+            /* 1. Fix the Header Collision */
+            header { flex-wrap: wrap; justify-content: space-between; gap: 15px; border-bottom: none; }
+            header > div:first-child { width: auto; } 
+            .status-area { width: auto; text-align: right; min-width: 120px; } 
+            .timeline-pill { width: 100%; justify-content: center; order: 3; margin-top: -10px; padding: 12px; } 
+
+            /* 2. Bring back the Compass and Stack the Grid */
+            .game-grid { display: flex; flex-direction: column; gap: 20px; }
+            .radar-column { display: block; order: -1; } /* Moves the radar ABOVE the input section */
+            .radar-box { width: 220px; height: 220px; margin: 0 auto; } /* Perfectly scaled for phones */
+            
+            /* 3. Make Inputs & Buttons Thumb-Friendly */
+            .input-wrapper { flex-direction: column; gap: 10px; }
+            .btn-scan { padding: 16px; width: 100%; border-radius: 12px; }
+            .shop-row { gap: 8px; margin: 10px 0; }
+            .shop-btn { padding: 10px; font-size: 0.9rem; }
+
+            /* 4. Fix the Stats Modal Squishing */
+            .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .modal { padding: 25px 20px; }
+        }
 
         /* CARDS */
         .glass-card {
