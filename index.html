@@ -266,6 +266,17 @@
         }
         .blip.latest { animation: pulseBlip 1.5s infinite; z-index: 20; border-color: var(--primary); }
 
+        /* TIME NEXUS SHOP */
+        .nexus-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 20px; }
+        .nexus-card { background: #fdfbfb; border: 2px solid var(--text-muted); border-radius: 12px; padding: 15px; text-align: left; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .nexus-card:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15); }
+        .nexus-info { max-width: 70%; }
+        .nexus-title { font-weight: 800; font-size: 1.1rem; color: var(--text-main); margin-bottom: 5px; }
+        .nexus-desc { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+        .btn-buy { background: var(--text-main); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; }
+        .btn-buy:disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; }
+        .btn-buy.purchased { background: var(--success); }
+
     </style>
 </head>
 <body>
@@ -283,6 +294,10 @@
             <span>📅 Daily Paradox</span>
             <span class="mode-desc">A unique challenge every 24h.</span>
         </button>
+        <button class="mode-btn" onclick="initMode('endless')">
+            <span>🌀 The Anomaly</span>
+            <span class="mode-desc">Rogue-lite Survival. Endless.</span>
+        </button>
     </div>
 
     <div id="storyModal" class="overlay" style="z-index: 200;">
@@ -299,6 +314,7 @@
     <header>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="brand" onclick="location.reload()">Temporle</div>
+            <div style="cursor: pointer; font-size: 1.5rem; transition: transform 0.2s;" onclick="showHelp()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">❔</div>
             <div style="cursor: pointer; font-size: 1.5rem; transition: transform 0.2s;" onclick="showStats()" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">📊</div>
         </div>
         <div id="yearDisplay" class="timeline-pill">
@@ -384,6 +400,12 @@
         <div style="font-size: 4rem;">💥</div>
         <h2>Timeline Collapse</h2>
         <p>Integrity failure. Paradox detected.</p>
+        <div id="autopsyUI" class="hidden" style="margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: left;">
+            <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 10px;">Run Autopsy</div>
+            <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px;">Depth Reached: <span id="autopsyDepth" style="color: var(--accent);"></span></div>
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">Avg. Spatial Error: <span id="autopsyAvg" style="color: var(--text-main);"></span></div>
+            <div style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">Total Guesses: <span id="autopsyGuesses" style="color: var(--text-main);"></span></div>
+        </div>
         <div id="dailyFailUI" class="hidden" style="margin-top: 20px;">
              <div style="color: var(--danger); font-weight:700; margin-bottom: 15px;">Daily Attempt Failed</div>
              
@@ -403,6 +425,45 @@
         <h2>Mission Complete</h2>
         <p>You have successfully navigated the Time Stream.</p>
         <button class="btn-modal" onclick="location.reload()">Return to Base</button>
+    </div>
+</div>
+
+<div id="nexusModal" class="overlay" style="z-index: 250;">
+    <div class="modal" style="max-width: 550px;">
+        <h2 style="color: var(--primary); font-weight: 900; text-transform: uppercase; letter-spacing: 2px;">Time Nexus</h2>
+        <p style="font-weight: 700; color: var(--text-muted);">Integrity is Currency. Choose your upgrades.</p>
+        
+        <div class="nexus-grid">
+            <div class="nexus-card">
+                <div class="nexus-info">
+                    <div class="nexus-title">LOD Override</div>
+                    <div class="nexus-desc">Disables compass text. Replaces it with exact distance to target in kilometers.</div>
+                </div>
+                <button class="btn-buy" id="buyLOD" onclick="buyUpgrade('lodOverride', 25, this)">-25%</button>
+            </div>
+            <div class="nexus-card">
+                <div class="nexus-info">
+                    <div class="nexus-title">Erosion Buffer</div>
+                    <div class="nexus-desc">Automatically shaves 800km off your miss distance before damage is calculated.</div>
+                </div>
+                <button class="btn-buy" id="buyErosion" onclick="buyUpgrade('erosionBuffer', 30, this)">-30%</button>
+            </div>
+            <div class="nexus-card">
+                <div class="nexus-info">
+                    <div class="nexus-title">Sub-Space Sensors</div>
+                    <div class="nexus-desc">Upgrades the radar text readout from 8 directions to 16 precise directions.</div>
+                </div>
+                <button class="btn-buy" id="buySensors" onclick="buyUpgrade('subspaceSensors', 20, this)">-20%</button>
+            </div>
+            <div class="nexus-card">
+                <div class="nexus-info">
+                    <div class="nexus-title">Predictive Engine</div>
+                    <div class="nexus-desc">Pre-loads a ghost blip on your radar at the start of each level, guaranteed to be within 3,000km of the target.</div>
+                </div>
+                <button class="btn-buy" id="buyPredictive" onclick="buyUpgrade('predictiveEngine', 35, this)">-35%</button>
+            </div>
+        </div>
+        <button class="btn-modal" style="margin-top: 25px;" onclick="closeNexus()">Continue Run</button>
     </div>
 </div>
 
@@ -429,6 +490,44 @@
         </div>
 
         <button class="btn-modal" onclick="closeStats()">Close</button>
+    </div>
+</div>
+
+<div id="helpModal" class="overlay" style="z-index: 300;" onclick="if(event.target === this) closeHelp()">
+    <div class="modal" style="text-align: left; max-height: 90vh; overflow-y: auto;">
+        <h2 style="margin-bottom: 5px; color: var(--text-main); font-size: 1.8rem; letter-spacing: -1px;">How To Play</h2>
+        <p style="font-weight: 600; color: var(--text-muted); margin-bottom: 20px; font-size: 1rem;">Triangulate the historical epicenter before your Integrity collapses.</p>
+        
+        <ul style="padding-left: 20px; margin-bottom: 25px; color: var(--text-main); font-weight: 500; font-size: 0.95rem; line-height: 1.5;">
+            <li style="margin-bottom: 8px;">Read the historical objective and type a modern-day country to scan.</li>
+            <li style="margin-bottom: 8px;">The radar compass will point you toward the correct target.</li>
+            <li><strong>Every wrong guess damages your Integrity.</strong> Farther guesses deal more damage.</li>
+        </ul>
+
+        <div style="font-size: 1rem; font-weight: 800; color: var(--text-main); border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 15px;">Examples</div>
+        
+        <div class="log-card" style="margin-bottom: 10px; padding: 10px 15px;">
+            <span class="log-name">Brazil</span><span class="log-dist" style="color: var(--text-muted);">8,204 km</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">
+            <strong>Brazil</strong> is on the wrong continent. The radar points towards the target, but you take <strong>Heavy Damage (15%)</strong>.
+        </p>
+
+        <div class="log-card close" style="margin-bottom: 10px; padding: 10px 15px;">
+            <span class="log-name">Spain</span><span class="log-dist">CLOSE - CHECK BORDERS</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4;">
+            <strong>Spain</strong> is within 800km! The radar blip turns orange, but you still take <strong>Light Damage (5%)</strong>.
+        </p>
+
+        <div class="log-card" style="margin-bottom: 10px; padding: 10px 15px; border-color: var(--success); background: #ecfdf5; color: #065f46;">
+            <span class="log-name">France</span><span style="font-weight: 800; color: var(--success);">TARGET FOUND</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 25px; line-height: 1.4;">
+            <strong>France</strong> is the exact location. The timeline is secured!
+        </p>
+
+        <button class="btn-modal" onclick="closeHelp()">Understood</button>
     </div>
 </div>
 
@@ -870,6 +969,14 @@
     storyLevels.sort((a,b) => parseYear(a.year) - parseYear(b.year));
 
     // GAME STATE
+    let totalEndlessDistance = 0;
+    let totalEndlessGuesses = 0;
+    let anomalyLevel = 1;
+    let activeUpgrades = {
+        lodOverride: false,
+        erosionBuffer: false,
+        subspaceSensors: false
+    };
     let dailyGuessCount = 0; // Tracks guesses in the current daily run
     let levelGuessCount = 0; // Tracks guesses for the current active level
     let defaultStats = { played: 0, wins: 0, currentStreak: 0, maxStreak: 0, distribution: {1:0, 2:0, 3:0, 4:0, 5:0, '6+':0} };
@@ -897,6 +1004,9 @@
         if (mode === 'daily') {
             document.getElementById('modeLabel').innerText = "DAILY PARADOX";
             startDaily();
+        } else if (mode === 'endless') {
+            document.getElementById('modeLabel').innerText = "THE ANOMALY";
+            startEndless();
         } else {
             document.getElementById('modeLabel').innerText = "TIME STREAM";
             startStory();
@@ -964,12 +1074,19 @@
             health += 10; 
             if (health > 100) health = 100;
             updateHealthUI();
+            // ... (keep the rest of the story win logic)
+        } else if (currentMode === 'endless') {
+            health += 5; // Small heal for surviving
+            if (health > 100) health = 100;
+            updateHealthUI();
             
-            document.getElementById('winMsg').innerText = currentLevelList[currentLevelIdx].name;
-            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
-            document.getElementById('winModal').style.display = 'flex';
-            document.getElementById('nextLvlBtn').classList.remove('hidden');
-            document.getElementById('dailyCompleteUI').classList.add('hidden');
+            // Trigger shop every 3 levels
+            if (anomalyLevel % 3 === 0) {
+                document.getElementById('nexusModal').style.display = 'flex';
+            } else {
+                anomalyLevel++;
+                loadRandomEndlessLevel();
+            } 
         } else {
             localStorage.setItem('temporle_daily_' + today, 'win');
             generateShareText(true);
@@ -996,13 +1113,26 @@
             generateShareText(false);
             saveAndRenderStats(false);
             
-            populateDebrief('loseDebrief', currentLevelList[currentLevelIdx]); // SHOW DEBRIEF
-            
+            populateDebrief('loseDebrief', currentLevelList[currentLevelIdx]); 
             document.getElementById('dailyFailUI').classList.remove('hidden');
             document.getElementById('retryBtn').classList.add('hidden');
+            document.getElementById('autopsyUI').classList.add('hidden'); // Hide autopsy
+        } else if (currentMode === 'endless') {
+            document.getElementById('dailyFailUI').classList.add('hidden');
+            document.getElementById('retryBtn').classList.remove('hidden');
+            
+            // CALCULATE AND SHOW AUTOPSY
+            document.getElementById('autopsyDepth').innerText = `Level ${anomalyLevel}`;
+            document.getElementById('autopsyGuesses').innerText = totalEndlessGuesses;
+            
+            const avgError = totalEndlessGuesses > 0 ? Math.round(totalEndlessDistance / totalEndlessGuesses) : 0;
+            document.getElementById('autopsyAvg').innerText = `${avgError} km`;
+            
+            document.getElementById('autopsyUI').classList.remove('hidden');
         } else {
             document.getElementById('dailyFailUI').classList.add('hidden');
             document.getElementById('retryBtn').classList.remove('hidden');
+            document.getElementById('autopsyUI').classList.add('hidden');
         }
         document.getElementById('loseModal').style.display = 'flex';
     }
@@ -1035,6 +1165,55 @@
         document.getElementById('btnAbility2').disabled = false;
         document.querySelectorAll('.blip').forEach(b => b.remove());
         
+        // UPGRADE: PREDICTIVE ENGINE (Ghost Blip)
+        if (currentMode === 'endless' && activeUpgrades.predictiveEngine) {
+            const tLat = currentLevelList[currentLevelIdx].center.lat;
+            const tLon = currentLevelList[currentLevelIdx].center.lon;
+            
+            // Generate a random offset within roughly 3000km
+            const latOffset = (Math.random() - 0.5) * 20; 
+            const lonOffset = (Math.random() - 0.5) * 20;
+            
+            const ghostDist = getDistance(tLat + latOffset, tLon + lonOffset, tLat, tLon);
+            const ghostBearing = getBearing(tLat, tLon, tLat + latOffset, tLon + lonOffset);
+            
+            const radar = document.getElementById('radarScreen');
+            const ghost = document.createElement('div');
+            ghost.className = 'blip';
+            let r = (ghostDist / 15000) * 50; if (r > 48) r = 48;
+            
+            ghost.style.background = "rgba(156, 163, 175, 0.5)"; // Faded grey
+            ghost.style.borderColor = "rgba(156, 163, 175, 0.8)";
+            ghost.style.boxShadow = "none";
+            
+            const rad = (ghostBearing - 90) * (Math.PI / 180); 
+            const x = r * Math.cos(rad); const y = r * Math.sin(rad);
+            ghost.style.left = `calc(50% + ${x}%)`; ghost.style.top = `calc(50% + ${y}%)`;
+            radar.appendChild(ghost);
+        }
+
+        // --- RESET ABILITIES & HINTS FOR NEW ROUND ---
+        const hintContainer = document.getElementById('hintText'); 
+        if (hintContainer) {
+            hintContainer.innerHTML = ''; 
+            hintContainer.style.display = ''; // Wipes the stubborn inline style!
+            hintContainer.classList.add('hidden'); // Relies purely on your CSS classes
+        }
+
+        // Re-enable the ability buttons so they can be clicked again
+        const btnMacro = document.getElementById('btnAbility1');
+        const btnDecrypt = document.getElementById('btnAbility2');
+        if (btnMacro) {
+            btnMacro.disabled = false;
+            btnMacro.style.opacity = '1';
+            btnMacro.innerHTML = '<span class="cost-badge">-15%</span> <span>Macro</span>'; 
+        }
+        if (btnDecrypt) {
+            btnDecrypt.disabled = false;
+            btnDecrypt.style.opacity = '1';
+            btnDecrypt.innerHTML = '<span class="cost-badge">-10%</span> <span>Decrypt</span>';
+        }
+
         levelGuessCount = 0;
         input.focus(); // Snaps the cursor back instantly
     }
@@ -1118,6 +1297,7 @@
         
         const level = currentLevelList[currentLevelIdx];
         const hintBox = document.getElementById('hintText');
+        hintBox.style.display = ''; // Ensures no inline styles are blocking it
         hintBox.classList.remove('hidden');
 
         if (type === 'continent') {
@@ -1154,6 +1334,16 @@
         let win = false;
         let dist = getDistance(country.lat, country.lon, target.lat, target.lon);
         
+        let calculatedDist = dist;
+        if (activeUpgrades.erosionBuffer && !win) {
+            calculatedDist = Math.max(0, calculatedDist - 800);
+        }
+
+        if (currentMode === 'endless') {
+            totalEndlessDistance += dist;
+            totalEndlessGuesses++;
+        }
+
         if (country.name.toLowerCase() === currentLevelList[currentLevelIdx].validCountry.toLowerCase()) {
             win = true;
             dist = 0;
@@ -1165,9 +1355,9 @@
         let damage = 0;
         if (!win) {
             // THE NEW BRUTAL SCALING
-            if (dist > 10000) damage = 25;       // Completely lost (Max 4 guesses)
-            else if (dist > 5000) damage = 15;   // Wrong continent
-            else if (dist > 2000) damage = 10;   // Wrong region
+            if (dist > calculatedDist) damage = 25;       // Completely lost (Max 4 guesses)
+            else if (dist > calculatedDist) damage = 15;   // Wrong continent
+            else if (dist > calculatedDist) damage = 10;   // Wrong region
             else damage = 5;                     // Close, but no free passes. Spamming hurts.
             
             health -= damage;
@@ -1256,16 +1446,30 @@
     }
 
     function updateRadarReadout(bearing, dist) {
-        const directions = ["North", "NE", "East", "SE", "South", "SW", "West", "NW"];
-        const index = Math.round(((bearing %= 360) < 0 ? bearing + 360 : bearing) / 45) % 8;
+        document.getElementById('compassArrow').style.transform = `rotate(${bearing}deg)`;
+
+        // UPGRADE: LOD OVERRIDE
+        if (activeUpgrades.lodOverride) {
+            document.getElementById('radarReadout').innerText = `Distance: ${Math.round(dist)} km`;
+            return;
+        }
+
+        // UPGRADE: SUB-SPACE SENSORS
+        let directions;
+        let divisor;
+        if (activeUpgrades.subspaceSensors) {
+            directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
+            divisor = 22.5;
+        } else {
+            directions = ["North", "NE", "East", "SE", "South", "SW", "West", "NW"];
+            divisor = 45;
+        }
         
+        const index = Math.round(((bearing %= 360) < 0 ? bearing + 360 : bearing) / divisor) % directions.length;
         let text = `Target is ${directions[index]}`;
         if (dist < 2000) text += " (Close!)";
         
         document.getElementById('radarReadout').innerText = text;
-        
-        // Spin the compass needle
-        document.getElementById('compassArrow').style.transform = `rotate(${bearing}deg)`;
     }
 
     function startTimer() {
@@ -1495,11 +1699,9 @@
 
     // --- PRO HOTKEYS ---
     document.addEventListener('keydown', (e) => {
-        // Don't trigger if they are actively typing a country name!
-        if (e.target.tagName === 'INPUT') return; 
-        
-        if (e.key === '1') document.getElementById('btnAbility1').click();
-        if (e.key === '2') document.getElementById('btnAbility2').click();
+        // e.preventDefault() stops the '1' or '2' from actually typing into the box!
+        if (e.key === '1') { e.preventDefault(); document.getElementById('btnAbility1').click(); }
+        if (e.key === '2') { e.preventDefault(); document.getElementById('btnAbility2').click(); }
     });
 
     // --- VICTORY SHOWER ---
@@ -1528,6 +1730,78 @@
     function closeStats() {
         document.getElementById('statsModal').style.display = 'none';
         if (!gameOver) document.getElementById('countryInput').focus();
+    }
+
+    // --- THE ANOMALY LOGIC ---
+    // --- THE ANOMALY LOGIC (INFINITE ENGINE) ---
+    function startEndless() {
+        // We no longer concatenate arrays! The Daily pool is safe.
+        anomalyLevel = 1;
+        health = 100;
+        gameOver = false;
+        totalEndlessDistance = 0; 
+        totalEndlessGuesses = 0;  
+        activeUpgrades = { lodOverride: false, erosionBuffer: false, subspaceSensors: false, predictiveEngine: false };
+        loadRandomEndlessLevel();
+    }
+
+    function loadRandomEndlessLevel() {
+        // Procedurally select a target from the massive countries array
+        const randomCountry = countries[Math.floor(Math.random() * countries.length)];
+        
+        // Generate a glitchy, corrupted year
+        const glitchYear = Math.floor(Math.random() * 4000);
+        const isBC = Math.random() > 0.5 ? "BC" : "AD";
+        
+        // Create the level object on the fly
+        const proceduralLevel = {
+            year: `ERR-${glitchYear} ${isBC}`,
+            name: "Spatial Anomaly",
+            center: { lat: randomCountry.lat, lon: randomCountry.lon },
+            validCountry: randomCountry.name,
+            scenario: "Historical logs corrupted. Timeline fracture detected. Rely entirely on sensor readouts to triangulate the geographic epicenter.",
+            note: "Infinite Survival Mode.",
+            continent: "DATA CORRUPTED" // Makes the Macro ability a gamble!
+        };
+
+        // Inject the procedural level into index 0 and load it
+        currentLevelList = [proceduralLevel];
+        loadLevel(0);
+        
+        // Override the UI text
+        const counter = document.getElementById('levelCountDisplay');
+        if (counter) counter.innerText = `Anomaly Depth: ${anomalyLevel}`;
+    }
+
+    function buyUpgrade(id, cost, btnElement) {
+        if (health <= cost || activeUpgrades[id]) { sfx.err(); return; }
+        
+        sfx.click();
+        health -= cost;
+        activeUpgrades[id] = true;
+        updateHealthUI();
+        
+        btnElement.innerText = "ACTIVE";
+        btnElement.classList.add("purchased");
+        btnElement.disabled = true;
+    }
+
+    function closeNexus() {
+        document.getElementById('nexusModal').style.display = 'none';
+        anomalyLevel++;
+        loadRandomEndlessLevel();
+    }
+
+    // --- HELP MODAL LOGIC ---
+    function showHelp() {
+        document.getElementById('helpModal').style.display = 'flex';
+    }
+
+    function closeHelp() {
+        document.getElementById('helpModal').style.display = 'none';
+        if (!gameOver && document.getElementById('countryInput')) {
+            document.getElementById('countryInput').focus();
+        }
     }
 </script>
 </body>
