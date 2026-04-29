@@ -399,7 +399,7 @@
     <div class="modal">
         <div style="font-size: 4rem;">💥</div>
         <h2>Timeline Collapse</h2>
-        <p>Integrity failure. Paradox detected.</p>
+        <p id="lossMessage">Integrity failure. Paradox detected.</p>
         <div id="autopsyUI" class="hidden" style="margin-top: 20px; background: #f9fafb; padding: 15px; border-radius: 12px; border: 1px solid var(--border); text-align: left;">
             <div style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; margin-bottom: 10px;">Run Autopsy</div>
             <div style="font-size: 1.1rem; font-weight: 800; color: var(--text-main); margin-bottom: 5px;">Depth Reached: <span id="autopsyDepth" style="color: var(--accent);"></span></div>
@@ -1066,80 +1066,107 @@
     }
 
     function triggerWin() {
-        sfx.win();
-        winShower(currentMode === 'daily' && dailyGuessCount === 1);
-        const today = new Date().toISOString().slice(0, 10);
-        
-        if (currentMode === 'story') {
-            health += 10; 
-            if (health > 100) health = 100;
-            updateHealthUI();
-            // ... (keep the rest of the story win logic)
-        } else if (currentMode === 'endless') {
-            health += 5; // Small heal for surviving
-            if (health > 100) health = 100;
-            updateHealthUI();
-            
-            // Trigger shop every 3 levels
-            if (anomalyLevel % 3 === 0) {
-                document.getElementById('nexusModal').style.display = 'flex';
-            } else {
-                anomalyLevel++;
-                loadRandomEndlessLevel();
-            } 
-        } else {
-            localStorage.setItem('temporle_daily_' + today, 'win');
-            generateShareText(true);
-            saveAndRenderStats(true);
-            
-            document.getElementById('winMsg').innerText = "Daily Paradox Resolved";
-            document.getElementById('winNote').innerText = currentLevelList[currentLevelIdx].note;
-            populateDebrief('winDebrief', currentLevelList[currentLevelIdx]); // SHOW DEBRIEF
-            
-            document.getElementById('winModal').style.display = 'flex';
-            document.getElementById('nextLvlBtn').classList.add('hidden');
-            document.getElementById('dailyCompleteUI').classList.remove('hidden');
-            startTimer();
+        gameOver = true;
+
+        // --- TELEMETRY PIPELINE ---
+        try {
+            fetch('https://temporleapi.onrender.com/api/telemetry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameMode: currentMode,
+                    isWin: true,
+                    guessCount: levelGuessCount,
+                    remainingHealth: health
+                })
+            });
+        } catch (err) {
+            console.error("Telemetry failed to send:", err);
         }
+
+        sfx.win();
+        document.getElementById('radar-container')?.classList.add('win-pulse');
+        
+        // Safely disable inputs without crashing
+        const inputField = document.getElementById('countryInput');
+        if (inputField) inputField.disabled = true;
+
+        // FIXED: Now it specifically targets the scan button class
+        const scanButton = document.querySelector('.btn-scan'); 
+        if (scanButton) scanButton.disabled = true;
+
+        // Show win modal and correct text
+        const modal = document.getElementById('winModal');
+        const winMsgElement = document.getElementById('winMsg');
+        if (winMsgElement) winMsgElement.innerText = `Epicenter Triangulated. The anomaly has been stabilized.`;
+        
+        // --- NEW ROUTING UI LOGIC ---
+        const nextBtn = document.getElementById('nextLvlBtn');
+        const dailyUI = document.getElementById('dailyCompleteUI');
+        
+        if (currentMode === 'daily') {
+            dailyUI.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            // If it's a daily win, populate the debrief
+            populateDebrief('winDebrief', dailyLevels[currentLevelIdx]);
+        } else {
+            dailyUI.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            
+            if (currentMode === 'endless') {
+                nextBtn.innerText = "Enter Time Nexus";
+            } else {
+                nextBtn.innerText = "Jump Forward";
+            }
+        }
+
+        modal.style.display = 'flex';
     }
 
     function triggerLoss() {
         gameOver = true;
-        sfx.err();
-        const today = new Date().toISOString().slice(0, 10);
-        
-        if (currentMode === 'daily') {
-            localStorage.setItem('temporle_daily_' + today, 'lose');
-            generateShareText(false);
-            saveAndRenderStats(false);
-            
-            populateDebrief('loseDebrief', currentLevelList[currentLevelIdx]); 
-            document.getElementById('dailyFailUI').classList.remove('hidden');
-            document.getElementById('retryBtn').classList.add('hidden');
-            document.getElementById('autopsyUI').classList.add('hidden'); // Hide autopsy
-        } else if (currentMode === 'endless') {
-            document.getElementById('dailyFailUI').classList.add('hidden');
-            document.getElementById('retryBtn').classList.remove('hidden');
-            
-            // CALCULATE AND SHOW AUTOPSY
-            document.getElementById('autopsyDepth').innerText = `Level ${anomalyLevel}`;
-            document.getElementById('autopsyGuesses').innerText = totalEndlessGuesses;
-            
-            const avgError = totalEndlessGuesses > 0 ? Math.round(totalEndlessDistance / totalEndlessGuesses) : 0;
-            document.getElementById('autopsyAvg').innerText = `${avgError} km`;
-            
-            document.getElementById('autopsyUI').classList.remove('hidden');
-        } else {
-            document.getElementById('dailyFailUI').classList.add('hidden');
-            document.getElementById('retryBtn').classList.remove('hidden');
-            document.getElementById('autopsyUI').classList.add('hidden');
+        health = 0;
+        updateHealthUI();
+
+        // --- NEW TELEMETRY PIPELINE ---
+        try {
+            fetch('https://temporleapi.onrender.com/api/telemetry', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    gameMode: currentMode,
+                    isWin: false,
+                    guessCount: levelGuessCount,
+                    remainingHealth: 0
+                })
+            });
+        } catch (err) {
+            console.error("Telemetry failed to send:", err);
         }
-        document.getElementById('loseModal').style.display = 'flex';
+        // ------------------------------
+
+        sfx.loss();
+        
+        // Safely disable inputs without crashing
+        const inputField = document.getElementById('countryInput');
+        if (inputField) inputField.disabled = true;
+
+        const scanButton = document.querySelector('.btn-scan'); // Simplified selector
+        if (scanButton) scanButton.disabled = true;
+
+        // Show loss modal
+        const targetLevel = currentLevelList[currentLevelIdx];
+        const modal = document.getElementById('lossModal');
+        const lossMsgElement = document.getElementById('lossMessage');
+        if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. The correct coordinates were: ${targetLevel.validCountry}.`;
+        modal.style.display = 'flex';
     }
 
     function loadLevel(idx) {
         currentLevelIdx = idx;
         
+        gameOver = false;
+
         document.getElementById('winModal').style.display = 'none';
         document.getElementById('loseModal').style.display = 'none';
         document.getElementById('endGameModal').style.display = 'none';
@@ -1159,6 +1186,10 @@
             counter.innerText = (currentMode === 'story') ? `Level ${idx + 1} / ${currentLevelList.length}` : "Daily Event";
         }
         
+        // 2. THIS WAS MISSING: Turn the Scan button back on!
+        const scanBtn = document.querySelector('.btn-scan');
+        if (scanBtn) scanBtn.disabled = false;
+
         document.getElementById('countryInput').value = '';
         document.getElementById('countryInput').disabled = false;
         document.getElementById('btnAbility1').disabled = false;
@@ -1309,7 +1340,8 @@
         }
     }
 
-    function handleGuess() {
+    // 1. ADD 'async' HERE
+    async function handleGuess() {
         if (gameOver) return;
         const input = document.getElementById('countryInput');
         const val = input.value.trim();
@@ -1326,13 +1358,32 @@
 
         sfx.scan();
         input.value = '';
-        input.focus(); // Snaps the cursor back instantly
+        input.focus(); 
         document.getElementById('suggestions').style.display = 'none';
 
-        const target = currentLevelList[currentLevelIdx].center;
+        const targetLevel = currentLevelList[currentLevelIdx];
+        const target = targetLevel.center;
         
         let win = false;
-        let dist = getDistance(country.lat, country.lon, target.lat, target.lon);
+        let dist = 0;
+
+        // 2. THE NEW SPATIAL API CALL
+        if (country.name.toLowerCase() === targetLevel.validCountry.toLowerCase()) {
+            win = true;
+        } else {
+            try {
+                const res = await fetch(`https://temporleapi.onrender.com/api/distance?guess=${country.name}&target=${targetLevel.validCountry}`);
+                
+                // If the API returns a 400 Bad Request (like a name mismatch), force it to the catch block!
+                if (!res.ok) throw new Error("Country not found in DB mapping"); 
+                
+                const data = await res.json();
+                dist = data.distanceKm;
+            } catch (err) {
+                console.warn(`Falling back to local math for ${country.name}`);
+                dist = getDistance(country.lat, country.lon, target.lat, target.lon);
+            }
+        }
         
         let calculatedDist = dist;
         if (activeUpgrades.erosionBuffer && !win) {
@@ -1343,34 +1394,28 @@
             totalEndlessDistance += dist;
             totalEndlessGuesses++;
         }
-
-        if (country.name.toLowerCase() === currentLevelList[currentLevelIdx].validCountry.toLowerCase()) {
-            win = true;
-            dist = 0;
-        }
         
+        // We still use the old math JUST to point the radar arrow in the right direction
         const bearingForRadar = getBearing(target.lat, target.lon, country.lat, country.lon);
         const bearingForText = getBearing(country.lat, country.lon, target.lat, target.lon);
 
         let damage = 0;
         if (!win) {
-            // THE NEW BRUTAL SCALING
-            if (dist > calculatedDist) damage = 25;       // Completely lost (Max 4 guesses)
-            else if (dist > calculatedDist) damage = 15;   // Wrong continent
-            else if (dist > calculatedDist) damage = 10;   // Wrong region
-            else damage = 5;                     // Close, but no free passes. Spamming hurts.
+            // We tighten the damage scaling since the borders are accurate now!
+            if (dist > 5000) damage = 25;       
+            else if (dist > 2500) damage = 15;   
+            else if (dist > 800) damage = 10;   
+            else damage = 5;                     
             
             health -= damage;
-            // NEW: VISCERAL SCREEN SHAKE
             document.body.classList.add('taking-damage');
             setTimeout(() => document.body.classList.remove('taking-damage'), 400);
 
             if (health <= 0) { health = 0; triggerLoss(); }
         }
 
-        // ADD THIS EMOJI TRACKER
         if (currentMode === 'daily') {
-            if (win && dailyGuessCount === 1) dailyGuessHistory.push('🌟'); // THE GOLDEN RUN
+            if (win && dailyGuessCount === 1) dailyGuessHistory.push('🌟'); 
             else if (win) dailyGuessHistory.push('🟩');
             else if (dist < 800) dailyGuessHistory.push('🟧');
             else if (dist < 2500) dailyGuessHistory.push('🟨');
@@ -1388,17 +1433,28 @@
     
 
     function nextLevel() {
+        document.getElementById('winModal').style.display = 'none';
+
+        // --- ENDLESS MODE: Route to the Shop ---
+        if (currentMode === 'endless') {
+            // FIXED: Only open shop on Level 3 and beyond
+            if (anomalyLevel >= 3) {
+                document.getElementById('nexusModal').style.display = 'flex';
+            } else {
+                anomalyLevel++;
+                loadRandomEndlessLevel();
+            }
+            return; 
+        }
+
+        // --- STORY MODE LOGIC ---
         if (currentLevelIdx + 1 >= currentLevelList.length) {
-            document.getElementById('winModal').style.display = 'none';
             document.getElementById('endGameModal').style.display = 'flex';
         } else {
-            // Increment logic for Story Mode
             let nextIdx = currentLevelIdx + 1;
             
-            // Check for story beat BEFORE loading level
             if (currentMode === 'story' && storyBeats[nextIdx]) {
-                document.getElementById('winModal').style.display = 'none';
-                currentLevelIdx = nextIdx; // Update index so closeStory loads correct level
+                currentLevelIdx = nextIdx; 
                 showStory(nextIdx);
             } else {
                 loadLevel(nextIdx);
