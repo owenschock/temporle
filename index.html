@@ -164,6 +164,14 @@
         .shop-btn:disabled { opacity: 0.5; filter: grayscale(1); }
         .cost-badge { background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; }
 
+        /* LEADERBOARD */
+        .lb-row { display: flex; align-items: center; background: #f9fafb; padding: 12px; border-radius: 8px; border: 1px solid rgba(0,0,0,0.05); font-weight: 600; font-size: 0.95rem; margin-bottom: 8px; transition: 0.2s; }
+        .lb-row:hover { transform: translateX(5px); border-color: var(--primary); }
+        .lb-rank { width: 45px; font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+        .lb-date { flex: 1; text-align: left; color: var(--text-main); font-size: 0.85rem; }
+        .lb-guesses { width: 80px; text-align: center; color: var(--text-main); font-weight: 800; }
+        .lb-health { width: 80px; text-align: center; color: var(--success); font-weight: 800; }
+
         /* MENU SCREEN */
         #mainMenu {
             position: absolute; inset: 0; background: rgba(255,255,255,0.95); z-index: 50;
@@ -298,6 +306,10 @@
             <span>🌀 The Anomaly</span>
             <span class="mode-desc">Rogue-lite Survival. Endless.</span>
         </button>
+        <button class="mode-btn" onclick="showLeaderboard()">
+            <span>🏆 Global Leaderboard</span>
+            <span class="mode-desc">Top 10 Anomaly Survivors</span>
+        </button>
     </div>
 
     <div id="storyModal" class="overlay" style="z-index: 200;">
@@ -310,7 +322,7 @@
             <button class="btn-modal" onclick="closeStory()">PROCEED</button>
         </div>
     </div>
-
+<div id="gameUI" style="display: none;">
     <header>
         <div style="display: flex; align-items: center; gap: 15px;">
             <div class="brand" onclick="location.reload()">Temporle</div>
@@ -369,6 +381,7 @@
                 </div>
             </div>
         </div>
+    </div>
     </div>
     <div id="toast">Copied to clipboard! 📋</div>
 </div>
@@ -481,6 +494,16 @@
         <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 10px;">Guess Distribution</div>
         <div id="distChart" class="dist-container">
             </div>
+            <div id="globalStatsContainer" style="background: rgba(79, 70, 229, 0.05); border: 1px solid rgba(79, 70, 229, 0.3); border-radius: 12px; padding: 15px; margin-top: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: left;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary); text-transform: uppercase;">Global Average</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-main);"><span id="globalAvgText">--</span> <span style="font-size: 0.8rem; color: var(--text-muted);">Guesses</span></div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Average</div>
+                <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-main);"><span id="personalAvgText">--</span> <span style="font-size: 0.8rem; color: var(--text-muted);">Guesses</span></div>
+            </div>
+        </div>
             <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 5px; margin-top: 20px;">Trophy Cabinet</div>
         <div class="trophy-row" id="trophyCase">
             <div class="trophy" id="trophySniper"><div class="trophy-tooltip">Sniper<br><span style="color:var(--accent); font-size:0.6rem;">Win on Guess 1</span></div>🎯</div>
@@ -490,6 +513,27 @@
         </div>
 
         <button class="btn-modal" onclick="closeStats()">Close</button>
+    </div>
+</div>
+
+<div id="leaderboardModal" class="overlay" style="z-index: 350;" onclick="if(event.target === this) closeLeaderboard()">
+    <div class="modal">
+        <h2 style="margin-bottom: 20px; color: var(--primary);">Top 10 Survivors</h2>
+        
+        <div id="leaderboardLoading" style="font-weight: 700; color: var(--text-muted); padding: 20px;">Fetching timeline data...</div>
+        
+        <div id="leaderboardContent" class="hidden">
+            <div style="display: flex; font-weight: 800; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 15px;">
+                <div style="width: 45px;">Rank</div>
+                <div style="flex: 1; text-align: left;">Date</div>
+                <div style="width: 80px; text-align: center;">Depth</div>
+                <div style="width: 80px; text-align: center;">Guesses</div>
+            </div>
+            <div id="leaderboardList" style="display: flex; flex-direction: column; max-height: 400px; overflow-y: auto;">
+                </div>
+        </div>
+
+        <button class="btn-modal" style="margin-top: 20px;" onclick="closeLeaderboard()">Close</button>
     </div>
 </div>
 
@@ -1000,6 +1044,8 @@
     function initMode(mode) {
         currentMode = mode;
         document.getElementById('mainMenu').style.display = 'none';
+
+        document.getElementById('gameUI').style.display = 'block';
         
         if (mode === 'daily') {
             document.getElementById('modeLabel').innerText = "DAILY PARADOX";
@@ -1128,16 +1174,25 @@
         health = 0;
         updateHealthUI();
 
-        // --- NEW TELEMETRY PIPELINE ---
+       // --- NEW TELEMETRY PIPELINE ---
+        let finalDepth = 0;
+        let finalGuesses = levelGuessCount;
+        
+        // If it's endless, hijack the variables!
+        if (currentMode === 'endless') {
+            finalDepth = anomalyLevel;
+            finalGuesses = totalEndlessGuesses;
+        }
+
         try {
             fetch('https://temporleapi.onrender.com/api/telemetry', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     gameMode: currentMode,
-                    isWin: false,
-                    guessCount: levelGuessCount,
-                    remainingHealth: 0
+                    isWin: false, // The run officially ends on a loss
+                    guessCount: finalGuesses, // Total guesses for the whole run
+                    remainingHealth: finalDepth // HIJACKING THIS COLUMN TO STORE DEPTH!
                 })
             });
         } catch (err) {
@@ -1145,18 +1200,18 @@
         }
         // ------------------------------
 
-        sfx.loss();
+        sfx.err(); // BUG 1 FIXED: Changed from sfx.loss()
         
         // Safely disable inputs without crashing
         const inputField = document.getElementById('countryInput');
         if (inputField) inputField.disabled = true;
 
-        const scanButton = document.querySelector('.btn-scan'); // Simplified selector
+        const scanButton = document.querySelector('.btn-scan'); 
         if (scanButton) scanButton.disabled = true;
 
         // Show loss modal
         const targetLevel = currentLevelList[currentLevelIdx];
-        const modal = document.getElementById('lossModal');
+        const modal = document.getElementById('loseModal'); // BUG 2 FIXED: Changed from lossModal
         const lossMsgElement = document.getElementById('lossMessage');
         if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. The correct coordinates were: ${targetLevel.validCountry}.`;
         modal.style.display = 'flex';
@@ -1608,7 +1663,7 @@
         setTimeout(() => showStats(dailyGuessCount), 1500); 
     }
 
-    function showStats(highlightBucket = null) {
+    async function showStats(highlightBucket = null) {
         const stats = loadStats();
         
         // Calculate Win Pct
@@ -1619,6 +1674,29 @@
         document.getElementById('statStreak').innerText = stats.currentStreak;
         document.getElementById('statMax').innerText = stats.maxStreak;
         
+        // --- NEW: CALCULATE PERSONAL AVERAGE ---
+        let totalWins = 0;
+        let totalGuesses = 0;
+        for (let key in stats.distribution) {
+            let count = stats.distribution[key];
+            totalWins += count;
+            let guessVal = key === '6+' ? 6 : parseInt(key); // Treat 6+ as 6 for the math
+            totalGuesses += (guessVal * count);
+        }
+        let personalAvg = totalWins > 0 ? (totalGuesses / totalWins).toFixed(2) : 0;
+        document.getElementById('personalAvgText').innerText = personalAvg > 0 ? personalAvg : "--";
+
+        // --- NEW: FETCH GLOBAL AVERAGE ---
+        try {
+            const res = await fetch('https://temporleapi.onrender.com/api/globalstats');
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('globalAvgText').innerText = data.averageGuesses > 0 ? data.averageGuesses : "--";
+            }
+        } catch (e) {
+            console.error("Failed to load global stats", e);
+        }
+
         let rank = "Trainee";
         if (stats.currentStreak >= 3) rank = "Agent";
         if (stats.currentStreak >= 7) rank = "Specialist";
@@ -1858,6 +1936,56 @@
         if (!gameOver && document.getElementById('countryInput')) {
             document.getElementById('countryInput').focus();
         }
+    }
+
+    // --- LEADERBOARD LOGIC ---
+    async function showLeaderboard() {
+        document.getElementById('leaderboardModal').style.display = 'flex';
+        document.getElementById('leaderboardLoading').classList.remove('hidden');
+        document.getElementById('leaderboardContent').classList.add('hidden');
+        const list = document.getElementById('leaderboardList');
+        list.innerHTML = ''; // Clear old data
+
+        try {
+            // Call your live Render API!
+            const res = await fetch('https://temporleapi.onrender.com/api/leaderboard?mode=endless');
+            if (!res.ok) throw new Error("Failed to fetch");
+            const data = await res.json();
+
+            data.forEach((run, index) => {
+                // Format the UTC timestamp into a readable local date
+                const dateObj = new Date(run.date);
+                const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+                
+                const row = document.createElement('div');
+                row.className = 'lb-row';
+                
+                // Add medals for the top 3
+                let rankDisplay = `#${index + 1}`;
+                if (index === 0) rankDisplay = '🥇';
+                if (index === 1) rankDisplay = '🥈';
+                if (index === 2) rankDisplay = '🥉';
+
+                row.innerHTML = `
+                    <div class="lb-rank">${rankDisplay}</div>
+                    <div class="lb-date">${dateStr}</div>
+                    <div class="lb-health" style="color: var(--primary);">${run.depth}</div>
+                    <div class="lb-guesses">${run.guesses}</div>
+                `;
+                list.appendChild(row);
+            });
+
+            document.getElementById('leaderboardLoading').classList.add('hidden');
+            document.getElementById('leaderboardContent').classList.remove('hidden');
+        } catch (err) {
+            document.getElementById('leaderboardLoading').innerText = "Failed to load leaderboard. The timeline is clouded.";
+            console.error("Leaderboard error:", err);
+        }
+    }
+
+    function closeLeaderboard() {
+        document.getElementById('leaderboardModal').style.display = 'none';
+        document.getElementById('leaderboardLoading').innerText = "Fetching timeline data..."; // Reset text
     }
 </script>
 </body>
