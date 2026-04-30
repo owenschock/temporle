@@ -1,3 +1,40 @@
+// --- SUPABASE INIT ---
+const supabaseUrl = 'https://sdemibvbmwigtzsnlglu.supabase.co';
+const supabaseKey = 'sb_publishable_Ur1vpJgla-V8OnLpm-c7Hw_TAe7ML5P';
+const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// --- AUTH LOGIC ---
+async function signInWithGoogle() {
+    try {
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                // This tells Google where to send the player back to after they log in
+                redirectTo: 'https://owenschock.github.io/temporle/' 
+            }
+        });
+        if (error) throw error;
+    } catch (error) {
+        console.error("Error logging in:", error.message);
+    }
+}
+
+// Check if a user is already logged in when the page loads
+async function checkUserSession() {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (session) {
+        // Player is logged in! Hide the button, show their email.
+        document.getElementById('googleLoginBtn').classList.add('hidden');
+        const profileDisplay = document.getElementById('userProfileDisplay');
+        profileDisplay.classList.remove('hidden');
+        profileDisplay.innerText = `Agent Active: ${session.user.email}`;
+    }
+}
+
+// Run the check immediately on load
+checkUserSession();
+
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTone(freq, type, dur) {
         if (audioCtx.state === 'suspended') audioCtx.resume();

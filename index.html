@@ -13,7 +13,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Temporle">
     <meta name="mobile-web-app-capable" content="yes">
-
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%234f46e5'/><circle cx='50' cy='50' r='40' fill='%23ffffff'/><path d='M50 20 V50 L70 70' stroke='%234f46e5' stroke-width='8' stroke-linecap='round'/></svg>">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -233,6 +233,13 @@
                 <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Your Average</div>
                 <div style="font-size: 1.4rem; font-weight: 800; color: var(--text-main);"><span id="personalAvgText">--</span> <span style="font-size: 0.8rem; color: var(--text-muted);">Guesses</span></div>
             </div>
+            <div id="authSection" style="margin-bottom: 20px;">
+            <button id="googleLoginBtn" class="btn-modal" style="background: #fff; color: #333; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; gap: 10px;" onclick="signInWithGoogle()">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" style="width: 20px; height: 20px;" alt="Google">
+                Sign in to Save Stats
+            </button>
+            <div id="userProfileDisplay" class="hidden" style="font-weight: 700; color: var(--primary);"></div>
+        </div>
         </div>
             <div style="text-align: left; font-size: 0.8rem; font-weight: 800; color: var(--text-main); text-transform: uppercase; margin-bottom: 5px; margin-top: 20px;">Trophy Cabinet</div>
         <div class="trophy-row" id="trophyCase">
