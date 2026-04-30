@@ -1,15 +1,17 @@
 // --- SUPABASE INIT ---
 const supabaseUrl = 'https://sdemibvbmwigtzsnlglu.supabase.co';
 const supabaseKey = 'sb_publishable_Ur1vpJgla-V8OnLpm-c7Hw_TAe7ML5P';
-const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// FIXED: We renamed 'supabase' to 'supabaseClient' to avoid the naming collision!
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- AUTH LOGIC ---
 async function signInWithGoogle() {
     try {
-        const { data, error } = await supabase.auth.signInWithOAuth({
+        // FIXED: Using supabaseClient instead
+        const { data, error } = await supabaseClient.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                // This tells Google where to send the player back to after they log in
                 redirectTo: 'https://owenschock.github.io/temporle/' 
             }
         });
@@ -21,10 +23,10 @@ async function signInWithGoogle() {
 
 // Check if a user is already logged in when the page loads
 async function checkUserSession() {
-    const { data: { session } } = await supabase.auth.getSession();
+    // FIXED: Using supabaseClient instead
+    const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (session) {
-        // Player is logged in! Hide the button, show their email.
         document.getElementById('googleLoginBtn').classList.add('hidden');
         const profileDisplay = document.getElementById('userProfileDisplay');
         profileDisplay.classList.remove('hidden');
