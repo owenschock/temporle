@@ -1155,6 +1155,14 @@
             nextBtn.classList.add('hidden');
             // If it's a daily win, populate the debrief
             populateDebrief('winDebrief', dailyLevels[currentLevelIdx]);
+
+            // --- ADD THESE 3 LINES ---
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem('temporle_daily_' + today, 'win'); // Locks the day
+            saveAndRenderStats(true); // Updates personal stats
+            startTimer(); // Starts the countdown
+            // -------------------------
+
         } else {
             dailyUI.classList.add('hidden');
             nextBtn.classList.remove('hidden');
@@ -1214,6 +1222,19 @@
         const modal = document.getElementById('loseModal'); // BUG 2 FIXED: Changed from lossModal
         const lossMsgElement = document.getElementById('lossMessage');
         if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. The correct coordinates were: ${targetLevel.validCountry}.`;
+        
+        // --- ADD THIS BLOCK FOR DAILY LOSSES ---
+        if (currentMode === 'daily') {
+            const today = new Date().toISOString().slice(0, 10);
+            localStorage.setItem('temporle_daily_' + today, 'loss'); // Locks the day
+            saveAndRenderStats(false); // Updates personal stats
+            
+            document.getElementById('dailyFailUI').classList.remove('hidden');
+            document.getElementById('retryBtn').classList.add('hidden');
+            populateDebrief('loseDebrief', targetLevel);
+        }
+        // ---------------------------------------
+        
         modal.style.display = 'flex';
     }
 
