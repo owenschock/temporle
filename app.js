@@ -22,20 +22,84 @@ async function signInWithGoogle() {
 }
 
 // Check if a user is already logged in when the page loads
+// Check if a user is already logged in when the page loads
 async function checkUserSession() {
-    // FIXED: Using supabaseClient instead
     const { data: { session } } = await supabaseClient.auth.getSession();
     
     if (session) {
-        document.getElementById('googleLoginBtn').classList.add('hidden');
-        const profileDisplay = document.getElementById('userProfileDisplay');
-        profileDisplay.classList.remove('hidden');
-        profileDisplay.innerText = `Agent Active: ${session.user.email}`;
+        // Logged In: Hide the login wrapper, show profile + logout
+        document.getElementById('loginPromptUI').classList.add('hidden');
+        document.getElementById('userProfileContainer').classList.remove('hidden');
+        document.getElementById('userProfileDisplay').innerText = `Agent Active: ${session.user.email}`;
+        
+        // NEW: Pull their latest stats from the cloud!
+        await pullStatsFromCloud(session.user.id);
+        
+    } else {
+        // Logged Out: Show the login wrapper, hide profile + logout
+        document.getElementById('loginPromptUI').classList.remove('hidden');
+        document.getElementById('userProfileContainer').classList.add('hidden');
     }
+}
+
+// --- CLOUD SYNC LOGIC ---
+
+const API_URL = "https://temporleapi.onrender.com"; // Replace with your actual Render URL!
+
+// PULL from Cloud (Downloads stats when they log in)
+async function pullStatsFromCloud(userId) {
+    try {
+        const response = await fetch(`${API_URL}/api/profile/${userId}`);
+        if (response.ok) {
+            const cloudStatsText = await response.text();
+            
+            // If the cloud has stats, overwrite the local browser stats
+            if (cloudStatsText && cloudStatsText !== "{}") {
+                localStorage.setItem('temporle_stats', cloudStatsText);
+                console.log("Agent Profile synced from cloud vault.");
+            }
+        }
+    } catch (error) {
+        console.error("Failed to pull stats from cloud:", error);
+    }
+}
+
+// PUSH to Cloud (Uploads stats silently in the background)
+async function pushStatsToCloud() {
+    // 1. Check if they are actually logged in. If not, do nothing!
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) return; 
+
+    // 2. Grab their current local stats vault
+    const localStats = localStorage.getItem('temporle_stats') || "{}";
+
+    // 3. Fire it off to your C# backend
+    try {
+        await fetch(`${API_URL}/api/profile`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                userId: session.user.id,
+                statsJson: localStats
+            })
+        });
+        console.log("Stats securely backed up to cloud vault.");
+    } catch (error) {
+        console.error("Failed to push stats to cloud:", error);
+    }
+}
+
+// Log the user out
+async function signOutUser() {
+    await supabaseClient.auth.signOut();
+    checkUserSession(); // Instantly flips the UI back to the login button
 }
 
 // Run the check immediately on load
 checkUserSession();
+
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playTone(freq, type, dur) {
@@ -1142,6 +1206,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (stats.played >= 30) stats.trophies.scholar = true;
         
         localStorage.setItem('temporle_stats', JSON.stringify(stats));
+        pushStatsToCloud();
         setTimeout(() => showStats(dailyGuessCount), 1500); 
     }
 
