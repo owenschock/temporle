@@ -5,6 +5,347 @@ const supabaseKey = 'sb_publishable_Ur1vpJgla-V8OnLpm-c7Hw_TAe7ML5P';
 // FIXED: We renamed 'supabase' to 'supabaseClient' to avoid the naming collision!
 const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+// --- STORY MODE: THE TEMPORAL WEB ---
+
+// --- STORY MODE: THE TEMPORAL WEB ---
+
+const storyNodes = {
+    // --- CHAPTER 1: THE TUTORIAL ---
+    "node_001": {
+        chapter: "Chapter I: Routine Operations",
+        name: "Standard Sweep",
+        era: "1990s", target: "Germany", mutation: "none",
+        description: "COMMAND: Standard temporal alignment. Triangulate the target.",
+        scenario: "The Berlin Wall has fallen. The Cold War thaws.",
+        continent: "Europe",
+        unlocks: ["node_002"]
+    },
+    "node_002": {
+        chapter: "Chapter I: Routine Operations",
+        name: "Industrial Echo",
+        era: "1850s", target: "United Kingdom", mutation: "none",
+        description: "COMMAND: Minor fluctuations detected. Proceed with sweep.",
+        scenario: "The smog of the Industrial Revolution blankets the capital.",
+        continent: "Europe",
+        unlocks: ["node_003"]
+    },
+    "node_003": {
+        chapter: "Chapter I: Routine Operations",
+        name: "The Fracture",
+        era: "1453 AD", target: "Turkey", mutation: "none",
+        description: "COMMAND: WARNING. High-density anomaly. Exercise caution.",
+        scenario: "Massive cannons batter the impenetrable walls of Constantinople.",
+        continent: "Europe/Asia",
+        unlocks: ["node_004", "node_005"] 
+    },
+
+    // --- CHAPTER 2: THE COLD WAR BRANCH ---
+    "node_004": {
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Operation Chrome",
+        era: "1962", target: "Cuba", mutation: "radar_jamming",
+        description: "COMMAND: Subject Zero is scrambling our sensors. Rely on raw distance data.",
+        scenario: "Nuclear missiles are spotted 90 miles from the US coast.",
+        continent: "North America",
+        unlocks: ["node_006"]
+    },
+    "node_006": {
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Space Race",
+        era: "1957", target: "Kazakhstan", mutation: "none",
+        description: "SUBJECT ZERO: You look to the stars, but your timeline is already dead.",
+        scenario: "Sputnik 1 launches, beginning the space age.",
+        continent: "Asia",
+        unlocks: ["node_boss_1"] // Leads to the first Boss!
+    },
+
+    // --- CHAPTER 2: THE ANTIQUITY BRANCH ---
+    "node_005": {
+        chapter: "Chapter II: The Dark Ages",
+        name: "The Black Death",
+        era: "1347 AD", target: "Italy", mutation: "integrity_bleed", 
+        description: "COMMAND: The temporal fabric is decaying rapidly. Work fast.",
+        scenario: "Trade ships arrive from the Black Sea carrying a deadly cargo.",
+        continent: "Europe",
+        unlocks: ["node_007"]
+    },
+    "node_007": {
+        chapter: "Chapter II: The Dark Ages",
+        name: "The First Crusade",
+        era: "1099 AD", target: "Israel", mutation: "none",
+        description: "SUBJECT ZERO: So much bloodshed to secure a future that won't exist.",
+        scenario: "A massive siege is laid upon the Holy City.",
+        continent: "Asia",
+        unlocks: ["node_boss_1"] // Branches merge at the Boss!
+    },
+
+    // --- CHAPTER 3: THE ANCHOR (BOSS LEVEL) ---
+    "node_boss_1": {
+        chapter: "Chapter III: Temporal Anchor Alpha",
+        name: "The Manhattan Project",
+        era: "1945", target: "United States", mutation: "hardcore", // We will build this next!
+        description: "COMMAND: CRITICAL. Subject Zero is attempting to erase the atomic age. ALL ABILITIES DISABLED.",
+        scenario: "The Trinity test is prepared in the desert of New Mexico.",
+        continent: "North America",
+        unlocks: [] // End of the current roadmap!
+    }
+};
+
+// The player's default progress through the Temporal Web
+// The player's progress through the Temporal Web
+let storyProgress = {
+    unlockedNodes: ["node_001"], 
+    clearedNodes: [],            
+    currentNode: null,
+    health: 100,      // NEW: Persistent Campaign Health
+    chronitons: 0     // NEW: Campaign Currency
+};
+
+// Draws the categorized missions on the screen
+function renderTemporalMap() {
+
+    // Update the UI Status Bar
+    document.getElementById('mapHealthDisplay').innerText = storyProgress.health + '%';
+    document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    const container = document.getElementById('nodeContainer');
+    container.innerHTML = ''; // Clear it out
+
+    // 1. Create a grouping object
+    const groupedNodes = {};
+
+    // 2. Sort the available nodes into their Chapter folders
+    for (const [nodeId, nodeData] of Object.entries(storyNodes)) {
+        const isCleared = storyProgress.clearedNodes.includes(nodeId);
+        const isUnlocked = storyProgress.unlockedNodes.includes(nodeId);
+        
+        // Skip nodes they haven't unlocked yet
+        if (!isUnlocked && !isCleared) continue; 
+
+        // If the chapter folder doesn't exist yet, create it!
+        if (!groupedNodes[nodeData.chapter]) {
+            groupedNodes[nodeData.chapter] = [];
+        }
+
+        // Add the node to its chapter folder
+        groupedNodes[nodeData.chapter].push({ id: nodeId, ...nodeData, isCleared });
+    }
+
+    // 3. Render the HTML for each Chapter
+    for (const [chapterName, nodesInChapter] of Object.entries(groupedNodes)) {
+        
+        // Draw the Chapter Header
+        const headerHTML = `
+            <div class="chapter-header">
+                <i class="bi bi-folder2-open"></i>
+                ${chapterName}
+            </div>
+        `;
+        container.insertAdjacentHTML('beforeend', headerHTML);
+
+        // Draw all the buttons inside this Chapter
+        nodesInChapter.forEach(node => {
+            let statusIcon = '<i class="bi bi-unlock-fill" style="color: var(--primary);"></i>';
+            let cssClass = 'node-btn';
+            
+            if (node.isCleared) {
+                statusIcon = '<i class="bi bi-check-circle-fill" style="color: var(--success);"></i>';
+                cssClass += ' cleared';
+            }
+            
+            // Special styling for Boss levels!
+            let titleStyle = '';
+            if (node.id.includes('boss')) {
+                cssClass += ' boss-node'; // You can add CSS for this later if you want!
+                titleStyle = 'color: var(--danger); text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);';
+            }
+
+            const nodeHTML = `
+                <button class="${cssClass}" onclick="startStoryNode('${node.id}')">
+                    <div class="node-status">${statusIcon}</div>
+                    <div class="node-era">${node.era}</div>
+                    <div class="node-title" style="${titleStyle}">${node.name}</div>
+                    <div class="node-desc">${node.description}</div>
+                    ${node.mutation !== 'none' ? `<div style="margin-top: 10px; font-size: 0.75rem; color: var(--danger); font-weight: 800; text-transform: uppercase;"><i class="bi bi-exclamation-triangle-fill"></i> Mutation: ${node.mutation.replace('_', ' ')}</div>` : ''}
+                </button>
+            `;
+            container.insertAdjacentHTML('beforeend', nodeHTML);
+        });
+    }
+}
+
+function startStoryNode(nodeId) {
+    storyProgress.currentNode = nodeId;
+    const nodeData = storyNodes[nodeId];
+    
+    // Hide the map, show the game UI!
+    document.getElementById('temporalMapUI').style.display = 'none';
+    document.getElementById('gameUI').style.display = 'block';
+
+    // 1. Find the country in the main database to get the Lat/Lon coordinates
+    const dbCountry = countries.find(c => c.name.toLowerCase() === nodeData.target.toLowerCase());
+
+    // 2. Construct a standard Level Object so the game engine understands it
+    const storyLevel = {
+        year: nodeData.era,
+        name: nodeData.name,
+        center: { lat: dbCountry.lat, lon: dbCountry.lon },
+        validCountry: nodeData.target,
+        scenario: nodeData.scenario,     
+        continent: nodeData.continent,
+        mutation: nodeData.mutation      // NEW: Pass the mutation to the engine!
+    };
+
+    // 3. Inject it into the game engine array
+    currentLevelList = [storyLevel];
+    
+    // --- NEW: PULL PERSISTENT CAMPAIGN HEALTH ---
+    health = storyProgress.health; 
+
+    // MUTATION: HARDCORE (The Boss Mechanic)
+    if (nodeData.mutation === 'hardcore') {
+        health = Math.min(health, 50); // Forces health to a maximum of 50%
+        console.log("HARDCORE MUTATION ACTIVE: Integrity capped at 50%.");
+    }
+    
+    // 4. Let your existing engine do all the setup work safely!
+    loadLevel(0);
+
+    // Override the UI label for Story Mode specifically
+    document.getElementById('modeLabel').innerText = `NODE: ${nodeId.replace('node_', '')}`;
+    console.log(`Mission Active: ${nodeData.name} | Target locked.`);
+}
+
+// Call this when the player successfully guesses the target in Story Mode
+function completeCurrentNode() {
+    const nodeId = storyProgress.currentNode;
+    const nodeData = storyNodes[nodeId];
+
+    // SAVE THEIR SURVIVING HEALTH
+    storyProgress.health = health;
+
+    // AWARD CURRENCY (Base 50 + Bonus for high health)
+    const payout = 50 + Math.floor(health / 2);
+    storyProgress.chronitons += payout;
+
+    activeUpgrades = { lodOverride: false, erosionBuffer: false, subspaceSensors: false, predictiveEngine: false };
+
+    // 1. Mark current node as cleared
+    if (!storyProgress.clearedNodes.includes(nodeId)) {
+        storyProgress.clearedNodes.push(nodeId);
+    }
+
+    // 2. Unlock the next nodes in the branch
+    if (nodeData.unlocks) {
+        nodeData.unlocks.forEach(unlockId => {
+            if (!storyProgress.unlockedNodes.includes(unlockId)) {
+                storyProgress.unlockedNodes.push(unlockId);
+            }
+        });
+    }
+
+    // 3. Save to local browser (and cloud later!)
+    saveStoryProgress();
+
+    // 4. THE GLITCH INTERCEPT
+    if (nodeId === "node_003") {
+        triggerFractureGlitch();
+        return; 
+    }
+
+    // Normal behavior: Send them back to the Map to pick the next level
+    document.getElementById('gameUI').style.display = 'none';
+    document.getElementById('winModal').style.display = 'none';
+    document.getElementById('temporalMapUI').style.display = 'block';
+    renderTemporalMap();
+}
+
+// The Cinematic Fracture Event
+function triggerFractureGlitch() {
+    // Hide everything else
+    document.getElementById('winModal').style.display = 'none';
+    document.getElementById('gameUI').style.display = 'none';
+
+    // Create a terrifying red glitch overlay dynamically
+    const glitchOverlay = document.createElement('div');
+    glitchOverlay.style.position = 'fixed';
+    glitchOverlay.style.top = '0';
+    glitchOverlay.style.left = '0';
+    glitchOverlay.style.width = '100vw';
+    glitchOverlay.style.height = '100vh';
+    glitchOverlay.style.backgroundColor = 'var(--danger)';
+    glitchOverlay.style.color = '#fff';
+    glitchOverlay.style.zIndex = '9999';
+    glitchOverlay.style.display = 'flex';
+    glitchOverlay.style.flexDirection = 'column';
+    glitchOverlay.style.alignItems = 'center';
+    glitchOverlay.style.justifyContent = 'center';
+    glitchOverlay.style.fontFamily = 'monospace';
+    glitchOverlay.style.textAlign = 'center';
+    
+    // Add CSS Shake via inline style
+    glitchOverlay.style.animation = 'shake 0.4s infinite';
+
+    glitchOverlay.innerHTML = `
+        <h1 style="font-size: 4rem; margin-bottom: 20px; font-weight: 900;">CRITICAL ERROR</h1>
+        <p style="font-size: 1.5rem; margin-bottom: 10px; font-weight: 700;">TIMELINE FRACTURE DETECTED AT ORIGIN POINT.</p>
+        <p style="font-size: 1.2rem; margin-bottom: 40px;">MULTIPLE PARADOXES SPAWNING. CONTAINMENT FAILED.</p>
+        <button class="btn-modal" style="background: #111; color: var(--danger); border: 2px solid var(--danger); box-shadow: 0 0 15px var(--danger);" onclick="rebootFromGlitch(this)">EMERGENCY REBOOT</button>
+    `;
+
+    // Inject the CSS keyframes if they don't exist
+    if (!document.getElementById('shakeKeyframes')) {
+        const style = document.createElement('style');
+        style.id = 'shakeKeyframes';
+        style.innerHTML = `
+            @keyframes shake {
+                0% { transform: translate(2px, 1px) rotate(0deg); }
+                20% { transform: translate(-3px, 0px) rotate(1deg); }
+                40% { transform: translate(1px, -1px) rotate(1deg); }
+                60% { transform: translate(-3px, 1px) rotate(0deg); }
+                80% { transform: translate(-1px, -1px) rotate(1deg); }
+                100% { transform: translate(1px, -2px) rotate(-1deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    document.body.appendChild(glitchOverlay);
+}
+
+// Triggers when they click the Emergency Reboot button
+function rebootFromGlitch(btn) {
+    const overlay = btn.parentElement;
+    overlay.remove(); // Destroy the red screen
+    
+    // Reveal the newly fractured, expanded map!
+    document.getElementById('temporalMapUI').style.display = 'block';
+    renderTemporalMap(); 
+}
+
+// Function to load this progress from LocalStorage
+function loadStoryProgress() {
+    const saved = localStorage.getItem('temporle_story_save');
+    if (saved) {
+        storyProgress = JSON.parse(saved);
+        
+        // SAFETY NET 1: Force unlock Node 1 if corrupted
+        if (!storyProgress.unlockedNodes || storyProgress.unlockedNodes.length === 0) {
+            storyProgress.unlockedNodes = ["node_001"];
+            storyProgress.clearedNodes = [];
+        }
+        
+        // SAFETY NET 2: Add health/currency to old save files
+        if (typeof storyProgress.health === 'undefined') storyProgress.health = 100;
+        if (typeof storyProgress.chronitons === 'undefined') storyProgress.chronitons = 0;
+    }
+}
+
+// Function to save progress (and push to your cloud vault!)
+function saveStoryProgress() {
+    localStorage.setItem('temporle_story_save', JSON.stringify(storyProgress));
+    pushStatsToCloud(); // IT LIVES!
+}
+
 // --- AUTH LOGIC ---
 async function signInWithGoogle() {
     try {
@@ -21,7 +362,6 @@ async function signInWithGoogle() {
     }
 }
 
-// Check if a user is already logged in when the page loads
 // Check if a user is already logged in when the page loads
 async function checkUserSession() {
     const { data: { session } } = await supabaseClient.auth.getSession();
@@ -51,13 +391,21 @@ async function pullStatsFromCloud(userId) {
     try {
         const response = await fetch(`${API_URL}/api/profile/${userId}`);
         if (response.ok) {
-            const cloudStatsText = await response.text();
+            // Because we return an object now, we parse as JSON instead of text!
+            const cloudData = await response.json(); 
             
-            // If the cloud has stats, overwrite the local browser stats
-            if (cloudStatsText && cloudStatsText !== "{}") {
-                localStorage.setItem('temporle_stats', cloudStatsText);
-                console.log("Agent Profile synced from cloud vault.");
+            // 1. Restore Endless/Daily Stats
+            if (cloudData.statsJson && cloudData.statsJson !== "{}") {
+                localStorage.setItem('temporle_stats', cloudData.statsJson);
             }
+            
+            // 2. Restore Story Campaign!
+            if (cloudData.storyJson && cloudData.storyJson !== "{}") {
+                localStorage.setItem('temporle_story_save', cloudData.storyJson);
+                loadStoryProgress(); // Instantly load it into the game's active memory
+            }
+            
+            console.log("Agent Profile & Campaign Vault synced from cloud.");
         }
     } catch (error) {
         console.error("Failed to pull stats from cloud:", error);
@@ -70,8 +418,9 @@ async function pushStatsToCloud() {
     const { data: { session } } = await supabaseClient.auth.getSession();
     if (!session) return; 
 
-    // 2. Grab their current local stats vault
+    // 2. Grab their current local stats vaults
     const localStats = localStorage.getItem('temporle_stats') || "{}";
+    const localStory = localStorage.getItem('temporle_story_save') || "{}"; // <-- Grab Story!
 
     // 3. Fire it off to your C# backend
     try {
@@ -82,10 +431,11 @@ async function pushStatsToCloud() {
             },
             body: JSON.stringify({
                 userId: session.user.id,
-                statsJson: localStats
+                statsJson: localStats,
+                storyJson: localStory // <-- Send Story!
             })
         });
-        console.log("Stats securely backed up to cloud vault.");
+        console.log("Profile & Campaign securely backed up to cloud vault.");
     } catch (error) {
         console.error("Failed to push stats to cloud:", error);
     }
@@ -555,6 +905,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let dailyGuessHistory = [];
     let health = 100;
     let gameOver = false;
+    let mutationTimer = null;
 
     // PRNG for Daily Seed
     function mulberry32(a) {
@@ -568,6 +919,16 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     function initMode(mode) {
         currentMode = mode;
+
+        // INTERCEPT STORY MODE
+        if (mode === 'story') {
+            document.getElementById('mainMenu').style.display = 'none';
+            document.getElementById('temporalMapUI').style.display = 'block';
+            loadStoryProgress(); 
+            renderTemporalMap();
+            return; // Stop the rest of the function from running!
+        }
+
         document.getElementById('mainMenu').style.display = 'none';
 
         document.getElementById('gameUI').style.display = 'block';
@@ -637,6 +998,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     function triggerWin() {
+        clearInterval(mutationTimer);
         gameOver = true;
 
         // --- TELEMETRY PIPELINE ---
@@ -681,19 +1043,32 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             // If it's a daily win, populate the debrief
             populateDebrief('winDebrief', dailyLevels[currentLevelIdx]);
 
-            // --- ADD THESE 3 LINES ---
             const today = new Date().toISOString().slice(0, 10);
             localStorage.setItem('temporle_daily_' + today, 'win'); // Locks the day
             saveAndRenderStats(true); // Updates personal stats
             startTimer(); // Starts the countdown
-            // -------------------------
+
+        } else if (currentMode === 'story') {
+            // NEW: The Story Mode intercept!
+            dailyUI.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+            nextBtn.innerText = "Return to Map";
+            
+            // Override the default "nextLevel" click with our new Map logic
+            nextBtn.onclick = () => completeCurrentNode(); 
 
         } else {
+            // Endless or default behavior
             dailyUI.classList.add('hidden');
             nextBtn.classList.remove('hidden');
             
+            // Reset the onclick just in case they played Story mode right before this
+            nextBtn.onclick = () => nextLevel(); 
+            
             if (currentMode === 'endless') {
                 nextBtn.innerText = "Enter Time Nexus";
+                // If you have a specific function to open the Nexus, you could put it here like:
+                // nextBtn.onclick = () => openNexusModal();
             } else {
                 nextBtn.innerText = "Jump Forward";
             }
@@ -703,6 +1078,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     function triggerLoss() {
+        clearInterval(mutationTimer);
         gameOver = true;
         health = 0;
         updateHealthUI();
@@ -746,7 +1122,15 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const targetLevel = currentLevelList[currentLevelIdx];
         const modal = document.getElementById('loseModal'); // BUG 2 FIXED: Changed from lossModal
         const lossMsgElement = document.getElementById('lossMessage');
-        if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. The correct coordinates were: ${targetLevel.validCountry}.`;
+
+        activeUpgrades = { lodOverride: false, erosionBuffer: false, subspaceSensors: false, predictiveEngine: false };
+
+        // --- FIX: HIDE ANSWER IN STORY MODE ---
+        if (currentMode === 'story') {
+            if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. Timeline collapse imminent. Target coordinates remain classified.`;
+        } else {
+            if (lossMsgElement) lossMsgElement.innerText = `Integrity Critical. The correct coordinates were: ${targetLevel.validCountry}.`;
+        }
         
         // --- ADD THIS BLOCK FOR DAILY LOSSES ---
         if (currentMode === 'daily') {
@@ -780,8 +1164,12 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         document.getElementById('scenarioText').innerText = level.scenario;
         document.getElementById('hintText').classList.add('hidden');
         document.getElementById('logList').innerHTML = '';
+        // --- FIX: RESET RADAR UI ---
         document.getElementById('radarReadout').innerText = "Standby";
-        
+        document.getElementById('radarReadout').style.color = "var(--text-muted)";
+        document.getElementById('compassArrow').style.transform = `rotate(0deg)`;
+        document.getElementById('compassArrow').style.opacity = '1'; 
+        // ---------------------------        
         const counter = document.getElementById('levelCountDisplay');
         if (counter) {
             counter.innerText = (currentMode === 'story') ? `Level ${idx + 1} / ${currentLevelList.length}` : "Daily Event";
@@ -846,7 +1234,36 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             btnDecrypt.innerHTML = '<span class="cost-badge">-10%</span> <span>Decrypt</span>';
         }
 
+        // --- MUTATION: HARDCORE (Disable standard abilities) ---
+        if (level.mutation === 'hardcore') {
+            if (btnMacro) { 
+                btnMacro.disabled = true; 
+                btnMacro.style.opacity = '0.3'; 
+                btnMacro.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; 
+            }
+            if (btnDecrypt) { 
+                btnDecrypt.disabled = true; 
+                btnDecrypt.style.opacity = '0.3'; 
+                btnDecrypt.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; 
+            }
+        }
         levelGuessCount = 0;
+        // --- MUTATION: INTEGRITY BLEED ---
+        clearInterval(mutationTimer); // Clear any old timers just in case
+        if (level.mutation === 'integrity_bleed') {
+            mutationTimer = setInterval(() => {
+                if (gameOver) return;
+                
+                health -= 2;
+                updateHealthUI();
+                
+                // Flash the screen red so they know they are bleeding
+                document.body.classList.add('taking-damage');
+                setTimeout(() => document.body.classList.remove('taking-damage'), 200);
+
+                if (health <= 0) triggerLoss();
+            }, 5000); // Ticks every 5000 milliseconds (5 seconds)
+        }
         input.focus(); // Snaps the cursor back instantly
     }
 
@@ -1077,14 +1494,26 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (dist < 800 && !win) div.classList.add('close');
         
         let distText = `${dist} km`;
-        if (win) distText = "TARGET FOUND";
-        else if (dist < 800) distText = "CLOSE - CHECK BORDERS";
+        if (win) {
+            distText = "TARGET FOUND";
+        } else if (dist === 0) {
+            distText = "SHARED LAND BORDER"; // For edge cases like Spain/UK (Gibraltar)
+        } else if (dist < 250) {
+            distText = "EXTREMELY CLOSE"; // For close neighbors like France/UK or Italy/Greece
+        } else if (dist < 800) {
+            distText = "REGIONAL PROXIMITY"; // For the wider 800km net
+        }
         
         div.innerHTML = `<span class="log-name"><span style="color:var(--text-muted); font-size:0.75rem; margin-right:8px;">#${levelGuessCount}</span>${name}</span><span class="log-dist">${distText}</span>`;
         document.getElementById('logList').prepend(div);
     }
 
     function addRadarBlip(dist, bearing, win) {
+        // --- FIX: STOP BLIPS DURING JAMMING ---
+        const activeLevel = currentLevelList[currentLevelIdx];
+        if (activeLevel && activeLevel.mutation === 'radar_jamming' && !win) {
+            return; // Completely skip drawing the blip!
+        }
         const radar = document.getElementById('radarScreen');
         const blip = document.createElement('div');
         blip.className = 'blip';
@@ -1103,7 +1532,24 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     function updateRadarReadout(bearing, dist) {
-        document.getElementById('compassArrow').style.transform = `rotate(${bearing}deg)`;
+        const arrow = document.getElementById('compassArrow');
+
+        // --- MUTATION: RADAR JAMMING ---
+        const activeLevel = currentLevelList[currentLevelIdx];
+        if (activeLevel && activeLevel.mutation === 'radar_jamming') {
+            arrow.style.opacity = '0'; // Hide the arrow completely
+            document.getElementById('radarReadout').innerText = `JAMMED // DISTANCE: ${Math.round(dist)}km`;
+            document.getElementById('radarReadout').style.color = "var(--danger)";
+            return; 
+        }
+
+        // NORMAL BEHAVIOR (Ensure arrow is visible and normal color)
+        arrow.style.opacity = '1';
+        document.getElementById('radarReadout').style.color = "var(--text-muted)";
+        arrow.style.transform = `rotate(${bearing}deg)`;
+
+
+        //document.getElementById('compassArrow').style.transform = `rotate(${bearing}deg)`;
 
         // UPGRADE: LOD OVERRIDE
         if (activeUpgrades.lodOverride) {
@@ -1534,3 +1980,72 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         document.getElementById('leaderboardModal').style.display = 'none';
         document.getElementById('leaderboardLoading').innerText = "Fetching timeline data..."; // Reset text
     }
+
+    // --- REQUISITION TERMINAL LOGIC ---
+
+function openShop() {
+    document.getElementById('shopCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    
+    // Reset button states (in case they bought things on a previous visit)
+    document.querySelectorAll('.shop-btn').forEach(btn => {
+        btn.disabled = false;
+        if (btn.innerText.includes("ACTIVE") || btn.innerText.includes("MAX")) {
+            // Restore original price text based on an attribute, or just hardcode the reset if lazy
+            // For now, we just rely on reloading the page or we can leave them disabled for the run!
+        }
+    });
+
+    // If health is full, disable the health button immediately
+    if (storyProgress.health >= 100) {
+        const healthBtn = document.querySelector("button[onclick*='health']");        
+        if (healthBtn) {
+            healthBtn.disabled = true;
+            healthBtn.innerText = "MAX HP";
+        }
+    }
+
+    document.getElementById('shopModal').style.display = 'flex';
+}
+
+function closeShop() {
+    document.getElementById('shopModal').style.display = 'none';
+}
+
+function buyShopItem(itemType, cost, btnElement) {
+    // 1. Check if they have enough money
+    if (storyProgress.chronitons < cost) {
+        sfx.err();
+        btnElement.style.borderColor = "var(--danger)";
+        btnElement.style.color = "var(--danger)";
+        setTimeout(() => {
+            btnElement.style.borderColor = "var(--accent)";
+            btnElement.style.color = "var(--accent)";
+        }, 300);
+        return;
+    }
+
+    // 2. Process the purchase
+    sfx.click(); // Or a custom "ka-ching" sound if you have one!
+    storyProgress.chronitons -= cost;
+
+    if (itemType === 'health') {
+        storyProgress.health += 25;
+        if (storyProgress.health >= 100) {
+            storyProgress.health = 100;
+            btnElement.disabled = true;
+            btnElement.innerText = "MAX HP";
+        }
+    } else {
+        // It's a tactical upgrade! Turn it on in the global game state
+        activeUpgrades[itemType] = true;
+        btnElement.disabled = true;
+        btnElement.innerText = "ACTIVE";
+    }
+
+    // 3. Update the UI and Save!
+    document.getElementById('shopCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    document.getElementById('mapHealthDisplay').innerText = storyProgress.health + '%';
+    document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    
+    saveStoryProgress();
+}
