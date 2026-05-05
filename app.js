@@ -7,10 +7,9 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
 // --- STORY MODE: THE TEMPORAL WEB ---
 
-// --- STORY MODE: THE TEMPORAL WEB ---
 
 const storyNodes = {
-    // --- CHAPTER 1: THE TUTORIAL ---
+    // --- CHAPTER 1: ROUTINE OPERATIONS (3 Levels) ---
     "node_001": {
         chapter: "Chapter I: Routine Operations",
         name: "Standard Sweep",
@@ -36,113 +35,452 @@ const storyNodes = {
         description: "COMMAND: WARNING. High-density anomaly. Exercise caution.",
         scenario: "Massive cannons batter the impenetrable walls of Constantinople.",
         continent: "Europe/Asia",
-        unlocks: ["node_004", "node_005"] 
+        unlocks: ["node_004"] 
     },
 
-    // --- CHAPTER 2: THE COLD WAR BRANCH ---
-    "node_004": {
+    // --- CHAPTER 2: THE IRON CURTAIN (10 Levels | Theme: Radar Jamming) ---
+    "node_004": { // The Chapter Root
         chapter: "Chapter II: The Iron Curtain",
         name: "Operation Chrome",
         era: "1962", target: "Cuba", mutation: "radar_jamming",
         description: "COMMAND: Subject Zero is scrambling our sensors. Rely on raw distance data.",
         scenario: "Nuclear missiles are spotted 90 miles from the US coast.",
         continent: "North America",
-        unlocks: ["node_006"]
+        unlocks: ["node_201", "node_204"] // Splits into Top and Bottom Branches!
     },
-    "node_006": {
+    // Top Branch (The Space & Arms Race)
+    "node_201": { 
         chapter: "Chapter II: The Iron Curtain",
         name: "Space Race",
-        era: "1957", target: "Kazakhstan", mutation: "none",
-        description: "SUBJECT ZERO: You look to the stars, but your timeline is already dead.",
+        era: "1957", target: "Kazakhstan", mutation: "radar_jamming",
+        description: "COMMAND: Maintain lock on the launch site. Do not lose the signal.",
         scenario: "Sputnik 1 launches, beginning the space age.",
         continent: "Asia",
-        unlocks: ["node_boss_1"] // Leads to the first Boss!
+        unlocks: ["node_202"]
     },
-
-    // --- CHAPTER 2: THE ANTIQUITY BRANCH ---
-    "node_005": {
-        chapter: "Chapter II: The Dark Ages",
-        name: "The Black Death",
-        era: "1347 AD", target: "Italy", mutation: "integrity_bleed", 
-        description: "COMMAND: The temporal fabric is decaying rapidly. Work fast.",
-        scenario: "Trade ships arrive from the Black Sea carrying a deadly cargo.",
+    "node_202": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Checkpoint Charlie",
+        era: "1961", target: "Germany", mutation: "radar_jamming",
+        description: "COMMAND: A tense standoff at the border of East and West. Secure the sector.",
+        scenario: "American and Soviet tanks face off at a divided city crossing.",
         continent: "Europe",
-        unlocks: ["node_007"]
+        unlocks: ["node_203"]
     },
-    "node_007": {
-        chapter: "Chapter II: The Dark Ages",
-        name: "The First Crusade",
-        era: "1099 AD", target: "Israel", mutation: "none",
-        description: "SUBJECT ZERO: So much bloodshed to secure a future that won't exist.",
-        scenario: "A massive siege is laid upon the Holy City.",
+    "node_203": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Prague Spring",
+        era: "1968", target: "Czech Republic", mutation: "radar_jamming",
+        description: "COMMAND: Suppress the unauthorized political liberalization.",
+        scenario: "Tanks roll into the capital to crush a reformist movement.",
+        continent: "Europe",
+        unlocks: ["node_208"]
+    },
+    "node_208": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Able Archer",
+        era: "1983", target: "Belgium", mutation: "radar_jamming",
+        description: "COMMAND: A NATO exercise is being misinterpreted as a real strike. Stabilize it.",
+        scenario: "The world sits on the brink of nuclear war over a simulated wargame.",
+        continent: "Europe",
+        unlocks: ["node_boss_2"]
+    },
+    // Bottom Branch (Proxy Wars)
+    "node_204": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Tsar Bomba",
+        era: "1961", target: "Russia", mutation: "radar_jamming",
+        description: "COMMAND: The largest nuclear detonation in history. Subject Zero is trying to suppress it.",
+        scenario: "A 50-megaton blast is about to shatter the Arctic circle.",
+        continent: "Europe/Asia",
+        unlocks: ["node_205"]
+    },
+    "node_205": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "The Proxy War",
+        era: "1965", target: "Vietnam", mutation: "radar_jamming",
+        description: "COMMAND: Target locked. Proceed with immediate pruning protocol.",
+        scenario: "Jungles burn. The timeline is fractured across the parallel.",
         continent: "Asia",
-        unlocks: ["node_boss_1"] // Branches merge at the Boss!
+        unlocks: ["node_206"]
+    },
+    "node_206": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Suez Crisis",
+        era: "1956", target: "Egypt", mutation: "radar_jamming",
+        description: "COMMAND: An unauthorized coalition is attempting to seize the canal.",
+        scenario: "A vital global shipping lane becomes a flashpoint for empire collapse.",
+        continent: "Africa",
+        unlocks: ["node_207"]
+    },
+    "node_207": { 
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Contra Rebellion",
+        era: "1985", target: "Nicaragua", mutation: "radar_jamming",
+        description: "COMMAND: Subject Zero is interfering with covert funding lines.",
+        scenario: "Guerilla warfare erupts in the Central American jungles.",
+        continent: "North America",
+        unlocks: ["node_boss_2"]
+    },
+    "node_boss_2": { // Chapter 2 Anchor
+        chapter: "Chapter II: The Iron Curtain",
+        name: "Anchor: The Wall",
+        era: "1989", target: "Germany", mutation: "hardcore_lite", 
+        description: "COMMAND: Subject Zero is defending the wall. Abilities will cost double.",
+        scenario: "The Iron Curtain is cracking, but a rogue agent is trying to hold it together.",
+        continent: "Europe",
+        unlocks: ["node_301"] // Moves to Ch 3
     },
 
-    // --- CHAPTER 3: THE ANCHOR (BOSS LEVEL) ---
+    // --- CHAPTER 3: THE DARK AGES (10 Levels | Theme: Integrity Bleed) ---
+    "node_301": { // The Chapter Root
+        chapter: "Chapter III: The Dark Ages",
+        name: "The Bronze Collapse",
+        era: "1177 BC", target: "Egypt", mutation: "integrity_bleed",
+        description: "COMMAND: A divergent timeline survived the Sea Peoples' invasion. Prune the unauthorized thriving cities.",
+        scenario: "The Mediterranean burns, but this timeline's Alexandria stands tall. For now.",
+        continent: "Africa",
+        unlocks: ["node_302", "node_303"] // Splits into Top and Bottom Branches!
+    },
+    // Top Branch (Plagues & Pandemics)
+    "node_302": { 
+        chapter: "Chapter III: The Dark Ages",
+        name: "The Antonine Plague",
+        era: "165 AD", target: "Italy", mutation: "integrity_bleed",
+        description: "COMMAND: Unauthorized survivors detected. Re-introduce the pathogen.",
+        scenario: "The Roman Empire is healing. The streets are filled with unauthorized citizens.",
+        continent: "Europe",
+        unlocks: ["node_304"]
+    },
+    "node_304": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "The Justinian Plague",
+        era: "541 AD", target: "Turkey", mutation: "integrity_bleed",
+        description: "COMMAND: The temporal fabric is decaying. Work fast before you bleed out.",
+        scenario: "Grain ships from Egypt arrive in the capital carrying infected rats.",
+        continent: "Europe/Asia",
+        unlocks: ["node_306"]
+    },
+    "node_306": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "Cocoliztli Epidemic",
+        era: "1545 AD", target: "Mexico", mutation: "integrity_bleed",
+        description: "COMMAND: A localized hemorrhagic fever is failing to spread. Correct the anomaly.",
+        scenario: "Millions are surviving an outbreak in the highlands. Prune them.",
+        continent: "North America",
+        unlocks: ["node_307"]
+    },
+    "node_307": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "Sweating Sickness",
+        era: "1485 AD", target: "United Kingdom", mutation: "integrity_bleed",
+        description: "COMMAND: Subject Zero is deploying unauthorized cures.",
+        scenario: "A mysterious, rapid-onset illness strikes the English countryside.",
+        continent: "Europe",
+        unlocks: ["node_boss_3"]
+    },
+    // Bottom Branch (Famine & Societal Decay)
+    "node_303": { 
+        chapter: "Chapter III: The Dark Ages",
+        name: "The Black Death",
+        era: "1347 AD", target: "France", mutation: "integrity_bleed", 
+        description: "COMMAND: Ignore the localized screams. Ensure the death toll reaches target metrics.",
+        scenario: "Trade ships arrive carrying a deadly cargo. The timeline fractures under the weight of the dead.",
+        continent: "Europe",
+        unlocks: ["node_305"]
+    },
+    "node_305": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "The Great Famine",
+        era: "1315 AD", target: "Ireland", mutation: "integrity_bleed", 
+        description: "COMMAND: Subject Zero is providing unauthorized agricultural aid. Stop them.",
+        scenario: "Heavy rains flood the crops of Northern Europe. A rogue agent is distributing food.",
+        continent: "Europe",
+        unlocks: ["node_308"]
+    },
+    "node_308": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "Year Without a Summer",
+        era: "1816 AD", target: "Indonesia", mutation: "integrity_bleed", 
+        description: "COMMAND: Suppress the global climate stabilizers.",
+        scenario: "Mount Tambora erupts, plunging the globe into a volcanic winter.",
+        continent: "Asia",
+        unlocks: ["node_309"]
+    },
+    "node_309": {
+        chapter: "Chapter III: The Dark Ages",
+        name: "Maya Collapse",
+        era: "900 AD", target: "Guatemala", mutation: "integrity_bleed", 
+        description: "COMMAND: An ancient civilization is refusing to abandon its cities. Force the collapse.",
+        scenario: "Drought ravages the peninsula, but the city-states stand defiant.",
+        continent: "North America",
+        unlocks: ["node_boss_3"]
+    },
+    "node_boss_3": { // Chapter 3 Anchor
+        chapter: "Chapter III: The Dark Ages",
+        name: "Anchor: Alexandria",
+        era: "48 BC", target: "Egypt", mutation: "hardcore_med", 
+        description: "COMMAND: CRITICAL. Subject Zero is defending the Library. Burn the unauthorized knowledge.",
+        scenario: "The greatest archive in human history is completely intact. Command wants it in ashes.",
+        continent: "Africa",
+        unlocks: ["node_401"] // Moves to Ch 4
+    },
+
+    // --- CHAPTER 4: THE AGE OF DISCOVERY (10 Levels | Theme: Fog of War) ---
+    "node_401": { // The Chapter Root
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "The Roanoke Anomaly",
+        era: "1590", target: "United States", mutation: "fog_of_war",
+        description: "COMMAND: An entire colony has vanished. Sensors blinded. Locate the divergent branch.",
+        scenario: "The island is abandoned. The word 'CROATOAN' is carved into a post.",
+        continent: "North America",
+        unlocks: ["node_402", "node_403"] // Splits into Top and Bottom Branches!
+    },
+    // Top Branch (Lost Expeditions)
+    "node_402": { 
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "The Franklin Expedition",
+        era: "1845", target: "Canada", mutation: "fog_of_war",
+        description: "COMMAND: Two ships are hidden in the ice. Target their coordinates.",
+        scenario: "Subject Zero has created a warm, divergent oasis in the Arctic.",
+        continent: "North America",
+        unlocks: ["node_404"]
+    },
+    "node_404": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "The Lost City of Z",
+        era: "1925", target: "Brazil", mutation: "fog_of_war",
+        description: "COMMAND: An explorer found an unauthorized civilization. Ensure he never returns.",
+        scenario: "A massive, thriving city hidden deep within the Amazon rainforest.",
+        continent: "South America",
+        unlocks: ["node_406"]
+    },
+    "node_406": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "Earhart Disappearance",
+        era: "1937", target: "Papua New Guinea", mutation: "fog_of_war",
+        description: "COMMAND: A pilot has navigated off the approved flight path. Correct her trajectory.",
+        scenario: "A Lockheed Electra vanishes over the central Pacific Ocean.",
+        continent: "Oceania",
+        unlocks: ["node_407"]
+    },
+    "node_407": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "Burke and Wills",
+        era: "1861", target: "Australia", mutation: "fog_of_war",
+        description: "COMMAND: The inland explorers are surviving on an unauthorized timeline.",
+        scenario: "An expedition attempts to cross a massive, punishing desert interior.",
+        continent: "Oceania",
+        unlocks: ["node_boss_4"]
+    },
+    // Bottom Branch (Rogue Navigators)
+    "node_403": { 
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "The Magellan Route",
+        era: "1521", target: "Philippines", mutation: "fog_of_war",
+        description: "COMMAND: Target detected in the Pacific. Neutralize the unauthorized circumnavigation.",
+        scenario: "The fleet approaches the islands. History is about to be violently rewritten.",
+        continent: "Asia",
+        unlocks: ["node_405"]
+    },
+    "node_405": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "El Dorado",
+        era: "1537", target: "Peru", mutation: "fog_of_war",
+        description: "COMMAND: Subject Zero is hiding the gold reserves. Find them.",
+        scenario: "A mythical city of gold thrives in the Andes, completely hidden from scanners.",
+        continent: "South America",
+        unlocks: ["node_408"]
+    },
+    "node_408": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "Mutiny on the Bounty",
+        era: "1789", target: "Fiji", mutation: "fog_of_war",
+        description: "COMMAND: A crew has rebelled against the Prime Timeline ledger. Suppress the mutiny.",
+        scenario: "Rogue sailors set their captain adrift and hide in the South Pacific.",
+        continent: "Oceania",
+        unlocks: ["node_409"]
+    },
+    "node_409": {
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "The Northwest Passage",
+        era: "1906", target: "Russia", mutation: "fog_of_war",
+        description: "COMMAND: An unauthorized icebreaker is charting the northern seas.",
+        scenario: "A treacherous, frozen route connecting two oceans is successfully navigated.",
+        continent: "Europe/Asia",
+        unlocks: ["node_boss_4"]
+    },
+    "node_boss_4": { // Chapter 4 Anchor
+        chapter: "Chapter IV: The Age of Discovery",
+        name: "Anchor: Tunguska",
+        era: "1908", target: "Russia", mutation: "hardcore_heavy", 
+        description: "COMMAND: Subject Zero has deployed a massive decoy network and hijacked your inputs. Do not let the timeline splinter.",
+        scenario: "A blinding light erupts over the Siberian taiga. The compass spins wildly.",
+        continent: "Europe/Asia",
+        unlocks: ["node_boss_1"] // Connects to Chapter V
+    },
+
+    // --- CHAPTER 5: THE ANCHOR (1 Level | The Final Boss) ---
     "node_boss_1": {
-        chapter: "Chapter III: Temporal Anchor Alpha",
+        chapter: "Chapter V: Temporal Anchor Alpha", 
         name: "The Manhattan Project",
-        era: "1945", target: "United States", mutation: "hardcore", // We will build this next!
+        era: "1945", target: "United States", mutation: "hardcore", 
         description: "COMMAND: CRITICAL. Subject Zero is attempting to erase the atomic age. ALL ABILITIES DISABLED.",
         scenario: "The Trinity test is prepared in the desert of New Mexico.",
         continent: "North America",
-        unlocks: [] // End of the current roadmap!
+        unlocks: [] // End of the road
+    }
+};
+// --- NARRATIVE: THE LORE ARCHIVE ---
+const archiveDatabase = {
+    "doc_001": {
+        title: "TAD Onboarding Brief",
+        cost: 0,
+        content: "WELCOME TO THE DIRECTORATE.<br><br>As a Field Triangulator, your role is paramount to the stability of the Prime Timeline. You will encounter 'anomalies'—events that deviate from the approved historical ledger. <br><br>Do not interact with the locals. Do not attempt to understand the temporal mechanics. Simply scan the epicenter, lock the coordinates, and return to base. <br><br>Predictability is peace. Structure is survival."
+    },
+    "doc_002": {
+        title: "Incident Report: Agent Zero",
+        cost: 150,
+        content: "RESTRICTED ACCESS.<br><br>Agent [REDACTED] has gone rogue. During a routine sweep in 1920s Berlin, the agent refused to trigger the alignment protocol, citing 'moral objections' to the erasure of the divergent timeline.<br><br>The agent has stolen a Class-4 Temporal Emitter and is moving backwards through the timeline. They are now classified as Subject Zero. Lethal paradox authorization is granted."
+    },
+    // --- THE DARK TURN ---
+    "doc_004": {
+        title: "SOP // Timeline Pruning",
+        cost: 250,
+        content: "EYES ONLY.<br><br>Field Agents often misinterpret the 'Alignment' process. We are not healing a fractured timeline; we are amputating it. When a rogue event occurs—an assassination prevented, a war averted—it spawns millions of unauthorized lives.<br><br>This creates unsustainable supply-chain drag on the Prime Timeline. By locking the coordinates, you are authorizing the localized incineration of that divergent branch. The anomalies are not fixed. They are erased. Efficiency requires sacrifice."
+    },
+    "doc_005": {
+        title: "Intercept: Triangulator [REDACTED]",
+        cost: 400,
+        content: "DECRYPTED AUDIO LOG.<br><br>\"Command, you're not seeing the data on the ground. This isn't a glitch. I'm looking at a city. They have families. They built a whole society out here in the 1920s branch and you want me to just... press the button?\"<br><br><em>[COMMAND: Agent, you are looking at an unauthorized statistical outlier. Initiate the sequence.]</em><br><br>\"No. They're alive. The math is wrong. You're wrong. I'm shutting the scanner down.\""
+    },
+    "doc_006": {
+        title: "The False Prime Theorem",
+        cost: 800,
+        content: "DIRECTOR LEVEL CLEARANCE REQUIRED.<br><br>The Entropy Coalition believes we are destroying nature. They fail to realize 'nature' was destroyed millennia ago. <br><br>The timeline we are protecting is not the original. The Prime Timeline is a carefully engineered sequence of events designed to guarantee exactly one outcome: the eventual founding of the Temporal Alignment Directorate.<br><br>If we fall, our history falls. We protect the timeline because we are the timeline."
+    },
+    // --- POST-GAME EPILOGUES (Hidden until completion) ---
+    "doc_epilogue_loyalist": {
+        title: "EYES ONLY: Promotion",
+        cost: 0,
+        content: "DIRECTORATE EYES ONLY.<br><br>Congratulations on your promotion, Director. You successfully excised the unauthorized timelines and neutralized Subject Zero. <br><br>Your first order of business: we have detected new micro-fractures in the 21st century. We believe there are sympathizers. You are authorized to begin preemptive timeline pruning. Welcome to the top."
+    },
+    "doc_epilogue_rebel": {
+        title: "INCIDENT REPORT: Subject One",
+        cost: 0,
+        content: "CRITICAL ALERT.<br><br>The Anchor has been shattered. The timeline is in freefall. <br><br>The agent formerly operating your console has gone rogue. They are armed with full temporal knowledge and are actively dismantling our containment fields. <br><br>New target locked. Lethal paradox authorization granted for: Subject One."
     }
 };
 
-// The player's default progress through the Temporal Web
 // The player's progress through the Temporal Web
 let storyProgress = {
     unlockedNodes: ["node_001"], 
     clearedNodes: [],            
     currentNode: null,
-    health: 100,      // NEW: Persistent Campaign Health
-    chronitons: 0     // NEW: Campaign Currency
+    health: 100,      
+    chronitons: 0,    
+    unlockedArchives: ["doc_001"] // NEW: Everyone gets the employee handbook for free
 };
 
-// Draws the categorized missions on the screen
-function renderTemporalMap() {
-
-    // Update the UI Status Bar
-    document.getElementById('mapHealthDisplay').innerText = storyProgress.health + '%';
-    document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+// Draws the categorized missions OR the chapter select screen
+function renderTemporalMap(activeChapter = null) {
     const container = document.getElementById('nodeContainer');
     container.innerHTML = ''; // Clear it out
+    // --- POST-GAME METAMORPHOSIS CHECK ---
+    const mapUI = document.getElementById('temporalMapUI');
+    const titleElement = mapUI.querySelector('h2');
+    const subtitleElement = mapUI.querySelector('p');
+    const playerEnding = localStorage.getItem('temporle_ending');
 
-    // 1. Create a grouping object
+    if (playerEnding === 'loyalist') {
+        mapUI.classList.add('loyalist-theme');
+        titleElement.innerHTML = `Temporle: Prime <span class="loyalist-badge"><i class="bi bi-star-fill"></i> Director</span>`;
+        subtitleElement.innerText = "The Prime Timeline is secure. Awaiting pruning orders.";
+        subtitleElement.style.color = "#d4af37";
+    } else if (playerEnding === 'rebel') {
+        mapUI.classList.add('rebel-theme');
+        titleElement.innerText = "HISTORY IS FREE";
+        subtitleElement.innerText = "The timeline is fractured. The Directorate is hunting you.";
+        subtitleElement.style.color = "var(--danger)";
+    } else {
+        // Default (Hasn't beaten game yet)
+        titleElement.innerText = "TIMELINE TOPOGRAPHY";
+        subtitleElement.innerText = "Select a temporal folder to view anomalies.";
+    }
+    // -------------------------------------
+
+    // 1. Update the UI Status Bar
+    document.getElementById('mapHealthDisplay').innerText = storyProgress.health + '%';
+    document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+
+    // 2. Group the nodes and calculate completion math
     const groupedNodes = {};
 
-    // 2. Sort the available nodes into their Chapter folders
     for (const [nodeId, nodeData] of Object.entries(storyNodes)) {
         const isCleared = storyProgress.clearedNodes.includes(nodeId);
         const isUnlocked = storyProgress.unlockedNodes.includes(nodeId);
-        
-        // Skip nodes they haven't unlocked yet
-        if (!isUnlocked && !isCleared) continue; 
 
-        // If the chapter folder doesn't exist yet, create it!
+        // Create the folder if it doesn't exist yet
         if (!groupedNodes[nodeData.chapter]) {
-            groupedNodes[nodeData.chapter] = [];
+            groupedNodes[nodeData.chapter] = {
+                nodes: [],
+                clearedCount: 0,
+                totalCount: 0,
+                isVisible: false // Hides chapters you haven't reached yet
+            };
         }
 
-        // Add the node to its chapter folder
-        groupedNodes[nodeData.chapter].push({ id: nodeId, ...nodeData, isCleared });
+        // Tally up the total levels in this chapter
+        groupedNodes[nodeData.chapter].totalCount++;
+
+        // If the player has access to this specific node...
+        if (isUnlocked || isCleared) {
+            groupedNodes[nodeData.chapter].isVisible = true; 
+            groupedNodes[nodeData.chapter].nodes.push({ id: nodeId, ...nodeData, isCleared });
+            if (isCleared) groupedNodes[nodeData.chapter].clearedCount++;
+        }
     }
 
-    // 3. Render the HTML for each Chapter
-    for (const [chapterName, nodesInChapter] of Object.entries(groupedNodes)) {
-        
-        // Draw the Chapter Header
-        const headerHTML = `
-            <div class="chapter-header">
-                <i class="bi bi-folder2-open"></i>
-                ${chapterName}
+    // 3A. RENDER: THE CHAPTER SELECT MENU
+    if (!activeChapter) {
+        for (const [chapterName, chapterData] of Object.entries(groupedNodes)) {
+            if (!chapterData.isVisible) continue; // Skip spoiler chapters
+
+            const isFullyCleared = chapterData.clearedCount === chapterData.totalCount;
+            const iconColor = isFullyCleared ? 'var(--success)' : 'var(--primary)';
+
+            const cardHTML = `
+                <button style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid ${iconColor}; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; padding: 20px; width: 100%; cursor: pointer; transition: all 0.2s ease; font-family: inherit;" 
+                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.1)';" 
+                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)';" 
+                onclick="renderTemporalMap('${chapterName}')">
+                    <div style="text-align: left;">
+                        <div style="font-size: 1.1rem; font-weight: 900; color: #111827;"><i class="bi bi-folder2-open" style="color: ${iconColor}; margin-right: 8px;"></i> ${chapterName}</div>
+                        <div style="font-size: 0.8rem; color: #6b7280; margin-top: 5px;">Access temporal coordinates...</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 0.7rem; font-weight: 800; color: ${iconColor}; text-transform: uppercase; letter-spacing: 1px;">Progress</div>
+                        <div style="font-size: 1.2rem; font-weight: 900; color: #111827;">${chapterData.clearedCount} / ${chapterData.totalCount}</div>
+                    </div>
+                </button>
+            `;
+            container.insertAdjacentHTML('beforeend', cardHTML);
+        }
+    } 
+    // 3B. RENDER: THE INDIVIDUAL LEVEL MENU
+    else {
+        // Draw the "Back" Button & Chapter Header
+        container.innerHTML = `
+            <button class="btn-modal" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); width: 100%; margin-bottom: 10px; font-size: 0.85rem;" onclick="renderTemporalMap()">
+                <i class="bi bi-arrow-left"></i> Return to Folders
+            </button>
+            <div class="chapter-header" style="margin-top: 10px;">
+                <i class="bi bi-folder2-open"></i> ${activeChapter}
             </div>
         `;
-        container.insertAdjacentHTML('beforeend', headerHTML);
 
-        // Draw all the buttons inside this Chapter
+        // Draw all the buttons inside this specific Chapter
+        const nodesInChapter = groupedNodes[activeChapter].nodes;
         nodesInChapter.forEach(node => {
             let statusIcon = '<i class="bi bi-unlock-fill" style="color: var(--primary);"></i>';
             let cssClass = 'node-btn';
@@ -152,10 +490,9 @@ function renderTemporalMap() {
                 cssClass += ' cleared';
             }
             
-            // Special styling for Boss levels!
             let titleStyle = '';
             if (node.id.includes('boss')) {
-                cssClass += ' boss-node'; // You can add CSS for this later if you want!
+                cssClass += ' boss-node'; 
                 titleStyle = 'color: var(--danger); text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);';
             }
 
@@ -201,10 +538,13 @@ function startStoryNode(nodeId) {
     // --- NEW: PULL PERSISTENT CAMPAIGN HEALTH ---
     health = storyProgress.health; 
 
-    // MUTATION: HARDCORE (The Boss Mechanic)
-    if (nodeData.mutation === 'hardcore') {
-        health = Math.min(health, 50); // Forces health to a maximum of 50%
-        console.log("HARDCORE MUTATION ACTIVE: Integrity capped at 50%.");
+    // MUTATION: BOSS SCALING
+    if (nodeData.mutation === 'hardcore_lite') {
+        health = Math.min(health, 75); // Caps at 75%
+        console.log("HARDCORE LITE: Integrity capped at 75%.");
+    } else if (nodeData.mutation === 'hardcore_med' || nodeData.mutation === 'hardcore_heavy' || nodeData.mutation === 'hardcore') {
+        health = Math.min(health, 50); // Caps at 50%
+        console.log("HARDCORE CRITICAL: Integrity capped at 50%.");
     }
     
     // 4. Let your existing engine do all the setup work safely!
@@ -219,6 +559,7 @@ function startStoryNode(nodeId) {
 function completeCurrentNode() {
     const nodeId = storyProgress.currentNode;
     const nodeData = storyNodes[nodeId];
+    stopMemoryLeak();
 
     // SAVE THEIR SURVIVING HEALTH
     storyProgress.health = health;
@@ -252,11 +593,64 @@ function completeCurrentNode() {
         return; 
     }
 
-    // Normal behavior: Send them back to the Map to pick the next level
+    // 5. THE NARRATIVE ROUTER
     document.getElementById('gameUI').style.display = 'none';
     document.getElementById('winModal').style.display = 'none';
-    document.getElementById('temporalMapUI').style.display = 'block';
-    renderTemporalMap();
+    document.body.classList.remove('fog-active');
+
+    // Check if beating this node unlocked a transmission
+    if (nodeTransmissions[nodeId]) {
+        playTransmission(nodeId);
+    } else {
+        // No story? Just go back to the map.
+        document.getElementById('temporalMapUI').style.display = 'block';
+        renderTemporalMap();
+    }
+}
+
+function playTransmission(nodeId) {
+    const beat = nodeTransmissions[nodeId];
+    document.getElementById('storySender').innerText = beat.sender;
+    document.getElementById('storyTitle').innerText = beat.title;
+    
+    const msgContainer = document.getElementById('storyMsg');
+    msgContainer.innerHTML = ""; 
+    
+    if (beat.sender !== "COMMAND") {
+        document.getElementById('storySender').style.color = "var(--danger)";
+        document.querySelector('#storyModal .modal').style.borderColor = "var(--danger)";
+    } else {
+        document.getElementById('storySender').style.color = "var(--primary)";
+        document.querySelector('#storyModal .modal').style.borderColor = "var(--primary)";
+    }
+
+    // Hijack the "PROCEED" button to return to the map!
+    const proceedBtn = document.querySelector('#storyModal .btn-modal');
+    proceedBtn.onclick = () => {
+        document.getElementById('storyModal').style.display = 'none';
+        document.getElementById('temporalMapUI').style.display = 'block';
+        renderTemporalMap();
+    };
+
+    document.getElementById('storyModal').style.display = 'flex';
+
+    // TYPEWRITER EFFECT
+    let i = 0;
+    function typeWriter() {
+        if (i < beat.msg.length) {
+            if (beat.msg.charAt(i) === '<') {
+                let tag = "";
+                while (beat.msg.charAt(i) !== '>' && i < beat.msg.length) { tag += beat.msg.charAt(i); i++; }
+                tag += '>';
+                msgContainer.innerHTML += tag;
+            } else {
+                msgContainer.innerHTML += beat.msg.charAt(i);
+            }
+            i++;
+            setTimeout(typeWriter, 20);
+        }
+    }
+    setTimeout(typeWriter, 300);
 }
 
 // The Cinematic Fracture Event
@@ -317,9 +711,14 @@ function rebootFromGlitch(btn) {
     const overlay = btn.parentElement;
     overlay.remove(); // Destroy the red screen
     
-    // Reveal the newly fractured, expanded map!
-    document.getElementById('temporalMapUI').style.display = 'block';
-    renderTemporalMap(); 
+    // --- NEW: Play the urgent Command transmission right after the reboot! ---
+    if (nodeTransmissions["node_003"]) {
+        playTransmission("node_003");
+    } else {
+        // Reveal the newly fractured, expanded map!
+        document.getElementById('temporalMapUI').style.display = 'block';
+        renderTemporalMap(); 
+    }
 }
 
 // Function to load this progress from LocalStorage
@@ -337,6 +736,19 @@ function loadStoryProgress() {
         // SAFETY NET 2: Add health/currency to old save files
         if (typeof storyProgress.health === 'undefined') storyProgress.health = 100;
         if (typeof storyProgress.chronitons === 'undefined') storyProgress.chronitons = 0;
+        if (!storyProgress.unlockedArchives) storyProgress.unlockedArchives = ["doc_001"];
+
+        // --- NEW: RETROACTIVE UNLOCK PATCH ---
+        // Scans your old cleared levels and makes sure any NEW content added to them gets unlocked!
+        storyProgress.clearedNodes.forEach(clearedId => {
+            if (storyNodes[clearedId] && storyNodes[clearedId].unlocks) {
+                storyNodes[clearedId].unlocks.forEach(unlockId => {
+                    if (!storyProgress.unlockedNodes.includes(unlockId)) {
+                        storyProgress.unlockedNodes.push(unlockId);
+                    }
+                });
+            }
+        });
     }
 }
 
@@ -854,34 +1266,67 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
     dailyLevels = dailyLevels.concat(expansionPack);
 
-    // --- STORY TRANSMISSION DATA ---
-    const storyBeats = {
-        0: {
-            title: "SYSTEM INITIALIZATION",
-            msg: "Agent, welcome to the Temporle Project. <br><br>An anomaly identified as <strong>'Subject Zero'</strong> is moving forward through time, erasing history as they go. <br><br>Your mission: Locate the Center of Power in each era to lock the timeline in place. Good luck.",
-            sender: "COMMAND"
-        },
-        10: {
-            title: "ANOMALY DETECTED",
-            msg: "You're doing well, but Subject Zero knows you are tracking them. <br><br>We are detecting increased instability in the Classical Era. The timeline is fracturing. Stay sharp.",
-            sender: "COMMAND"
-        },
-        20: {
-            title: "INCOMING MESSAGE",
-            msg: "Why do you persist? History is a burden. I am simply... lightening the load. <br><br>Let the past die.",
-            sender: "SUBJECT ZERO"
-        },
-        35: {
-            title: "CRITICAL WARNING",
-            msg: "Subject Zero has accelerated. They are moving into the Industrial Age. <br><br>If they reach the Modern Era before you stabilize the timeline, we lose everything.",
-            sender: "COMMAND"
-        },
-        49: {
-            title: "FINAL CONFRONTATION",
-            msg: "I see you. You're at the end of the line. <br><br>One last era. One last chance to save your precious 'reality'. Let's see if you know your own world.",
-            sender: "SUBJECT ZERO"
-        }
-    };
+// --- NARRATIVE: NODE-BASED TRANSMISSIONS ---
+// These play IMMEDIATELY AFTER you beat the specified node, before returning to the map.
+const nodeTransmissions = {
+    // --- CHAPTER 1: THE INTRODUCTION ---
+    "node_003": { 
+        title: "CRITICAL BRIEFING // ROGUE ENTITY",
+        msg: "Agent, the system didn't just crash. It was attacked. <br><br>We have identified a rogue Triangulator—designation: <strong>Subject Zero</strong>—actively detonating paradoxes across the timeline. If these fractures reach the Anchor Points, our reality ceases to exist. <br><br>Track their signal. Prune the anomalies. Do not fail.",
+        sender: "COMMAND"
+    },
+
+    // --- CHAPTER 2: THE IRON CURTAIN ---
+    "node_203": { // Top Branch (Prague Spring)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "They call it 'Alignment.' I call it control. <br><br>You just crushed a reformist movement to keep the timeline docile. Do you ever actually look at the lives you're erasing, or do you just stare at the radar?",
+        sender: "SUBJECT ZERO"
+    },
+    "node_007": { // Bottom Branch (Proxy War)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "You think you're saving the world? You're just a janitor sweeping up the Directorate's genocide. <br><br>Every time you press that scan button, you're incinerating millions of lives to keep their 'Prime Timeline' clean. Wake up. I'm not breaking history. I'm setting it free.",
+        sender: "SUBJECT ZERO"
+    },
+    "node_boss_2": { // Chapter 2 Anchor
+        title: "DIRECTIVE // COGNITIVE HAZARD",
+        msg: "Agent, our telemetry shows Subject Zero has been broadcasting to your terminal. <br><br>Do not engage. Empathy is a cognitive hazard. The anomaly uses emotional manipulation to protect unauthorized timeline branches. The Prime Timeline relies on your absolute obedience.",
+        sender: "COMMAND"
+    },
+
+    // --- CHAPTER 3: THE DARK AGES ---
+    "node_306": { // Top Branch (Cocoliztli Epidemic)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "I cured this sickness. I gave them life. And you just marched in, triangulated their location, and re-introduced the pathogen. <br><br>How do you sleep? How do you justify this?",
+        sender: "SUBJECT ZERO"
+    },
+    "node_308": { // Bottom Branch (Year Without a Summer)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "They were going to survive the climate shift. I showed them how to stabilize the crops. <br><br>You just erased an entire divergent culture just to hit a Directorate quota. You are the villain here.",
+        sender: "SUBJECT ZERO"
+    },
+    "node_boss_3": { // Chapter 3 Anchor
+        title: "SITREP // ACCEPTABLE LOSSES",
+        msg: "Subject Zero is attempting to shield unauthorized timelines from our sensors using localized fog in the upcoming eras. <br><br>Do not let their propaganda infect your protocols. These divergent populations are statistical errors. They are supply-chain drag. Prune them without hesitation.",
+        sender: "COMMAND"
+    },
+
+    // --- CHAPTER 4: THE AGE OF DISCOVERY ---
+    "node_406": { // Top Branch (Earhart)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "I just wanted her to finish her flight. That's it. <br><br>Why does the Directorate demand that she crashes into the ocean? Why does history have to be so cruel to be 'correct'? It's sick.",
+        sender: "SUBJECT ZERO"
+    },
+    "node_408": { // Bottom Branch (Mutiny on the Bounty)
+        title: "UNAUTHORIZED INTERCEPT",
+        msg: "Look at what they are making you do. Mutineers, explorers, dreamers... you're hunting down anyone who dares to step off the Directorate's approved path. <br><br>They just wanted to be free. Just like me.",
+        sender: "SUBJECT ZERO"
+    },
+    "node_boss_4": { // Chapter 4 Anchor (The Final Warning)
+        title: "THE FINAL WARNING",
+        msg: "This is it. The Temporal Anchor. <br><br>If you align the Manhattan Project, you lock the universe into the Directorate's cage forever. I can't let you do that. I'm going to throw everything I have at you. <br><br>Please... don't make me stop you.",
+        sender: "SUBJECT ZERO"
+    }
+};
 
     // UTILS
     function parseYear(yStr) { let y = parseInt(yStr); return yStr.includes("BC") ? -y : y; }
@@ -906,6 +1351,11 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     let health = 100;
     let gameOver = false;
     let mutationTimer = null;
+    let hijackTriggered = false;
+    // --- FINAL BOSS GLOBALS ---
+    let doomsdayTimer = null;
+    let doomsdaySeconds = 60;
+    let bossTargetsFound = [];
 
     // PRNG for Daily Seed
     function mulberry32(a) {
@@ -922,15 +1372,20 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         // INTERCEPT STORY MODE
         if (mode === 'story') {
+            // Hide the main menu immediately
             document.getElementById('mainMenu').style.display = 'none';
-            document.getElementById('temporalMapUI').style.display = 'block';
-            loadStoryProgress(); 
-            renderTemporalMap();
+            
+            // Run the boot sequence, and WHEN IT FINISHES, load the map!
+            runBootSequence(() => {
+                document.getElementById('temporalMapUI').style.display = 'block';
+                loadStoryProgress(); 
+                renderTemporalMap();
+            });
             return; // Stop the rest of the function from running!
         }
 
+        // --- Normal Behavior for Daily & Endless ---
         document.getElementById('mainMenu').style.display = 'none';
-
         document.getElementById('gameUI').style.display = 'block';
         
         if (mode === 'daily') {
@@ -939,10 +1394,7 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         } else if (mode === 'endless') {
             document.getElementById('modeLabel').innerText = "THE ANOMALY";
             startEndless();
-        } else {
-            document.getElementById('modeLabel').innerText = "TIME STREAM";
-            startStory();
-        }
+        } 
     }
 
     function startStory() {
@@ -1082,6 +1534,8 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         gameOver = true;
         health = 0;
         updateHealthUI();
+        stopMemoryLeak();
+        document.body.classList.remove('fog-active');
 
        // --- NEW TELEMETRY PIPELINE ---
         let finalDepth = 0;
@@ -1151,12 +1605,25 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         currentLevelIdx = idx;
         
         gameOver = false;
+        const level = currentLevelList[idx];
+
+        if (currentMode === 'story' && level.mutation === 'hardcore') {
+            startMemoryLeak();
+        } else {
+            stopMemoryLeak(); // Safety catch for normal levels
+        }
+
+        // 2. The Fog of War (Chapter IV)
+        if (currentMode === 'story' && level && level.mutation === 'fog_of_war') {
+            document.body.classList.add('fog-active');
+        } else {
+            document.body.classList.remove('fog-active');
+        }
 
         document.getElementById('winModal').style.display = 'none';
         document.getElementById('loseModal').style.display = 'none';
         document.getElementById('endGameModal').style.display = 'none';
 
-        const level = currentLevelList[idx];
         updateBackground(level.year);
         updateHealthUI();
         
@@ -1234,19 +1701,24 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             btnDecrypt.innerHTML = '<span class="cost-badge">-10%</span> <span>Decrypt</span>';
         }
 
-        // --- MUTATION: HARDCORE (Disable standard abilities) ---
-        if (level.mutation === 'hardcore') {
-            if (btnMacro) { 
-                btnMacro.disabled = true; 
-                btnMacro.style.opacity = '0.3'; 
-                btnMacro.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; 
-            }
-            if (btnDecrypt) { 
-                btnDecrypt.disabled = true; 
-                btnDecrypt.style.opacity = '0.3'; 
-                btnDecrypt.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; 
-            }
+        // --- MUTATION: BOSS ABILITIES ---
+        if (level.mutation === 'hardcore_lite') {
+            // Abilities cost double!
+            if (btnMacro) btnMacro.innerHTML = '<span class="cost-badge">-30%</span> <span>Macro</span>';
+            if (btnDecrypt) btnDecrypt.innerHTML = '<span class="cost-badge">-20%</span> <span>Decrypt</span>';
+        } else if (level.mutation === 'hardcore_med' || level.mutation === 'hardcore_heavy' || level.mutation === 'hardcore') {
+            // Abilities completely disabled!
+            if (btnMacro) { btnMacro.disabled = true; btnMacro.style.opacity = '0.3'; btnMacro.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; }
+            if (btnDecrypt) { btnDecrypt.disabled = true; btnDecrypt.style.opacity = '0.3'; btnDecrypt.innerHTML = '<i class="bi bi-x-circle"></i> OFFLINE'; }
         }
+
+        // --- MUTATION TRIGGERS ---
+        if (currentMode === 'story' && (level.mutation === 'hardcore_med' || level.mutation === 'hardcore_heavy' || level.mutation === 'hardcore')) {
+            startMemoryLeak();
+        } else {
+            stopMemoryLeak(); 
+        }
+
         levelGuessCount = 0;
         // --- MUTATION: INTEGRITY BLEED ---
         clearInterval(mutationTimer); // Clear any old timers just in case
@@ -1264,6 +1736,14 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (health <= 0) triggerLoss();
             }, 5000); // Ticks every 5000 milliseconds (5 seconds)
         }
+
+        // --- THE FINAL BOSS TRIGGER ---
+        if (currentMode === 'story' && level.name === "The Manhattan Project") {
+            startFinalBossSequence();
+        } else {
+            stopFinalBossSequence();
+        }
+
         input.focus(); // Snaps the cursor back instantly
     }
 
@@ -1337,6 +1817,8 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function useAbility(type) {
         if (gameOver) return;
         const cost = type === 'continent' ? 15 : 10;
+        const activeLevel = currentLevelList[currentLevelIdx];
+        if (currentMode === 'story' && activeLevel && activeLevel.mutation === 'hardcore_lite') cost *= 2; // Double cost!
         if (currentMode === 'daily') dailyGuessCount++; // ADD THIS LINE HERE
         if (health <= cost) { sfx.err(); return; }
 
@@ -1373,6 +1855,106 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
         levelGuessCount++;
         if (currentMode === 'daily') dailyGuessCount++;
+
+        // --- NARRATIVE HIJACK: THE TRIPLE THREAT ---
+        if (currentMode === 'story' && currentLevelList[currentLevelIdx].name === "The Manhattan Project") {
+            const bossTargets = ["italy", "japan", "united states"];
+            const valLower = country.name.toLowerCase();
+            
+            // The 3-Second Trap still fires on the very first guess to waste their Doomsday time!
+            if (!hijackTriggered && levelGuessCount === 1) {
+                hijackTriggered = true;
+                input.disabled = true;
+                sfx.err();
+                document.body.classList.add('taking-damage');
+                document.getElementById('radarReadout').innerText = "SYSTEM HIJACKED.";
+                document.getElementById('radarReadout').style.color = "var(--danger)";
+                document.getElementById('compassArrow').style.opacity = '1';
+                document.getElementById('compassArrow').style.transform = `rotate(180deg)`; 
+                setTimeout(() => {
+                    document.body.classList.remove('taking-damage');
+                    input.disabled = false; input.value = ''; input.focus();
+                    document.getElementById('compassArrow').style.opacity = '0';
+                }, 3000);
+                return;
+            }
+
+            // Check if they guessed one of the 3 targets
+            if (bossTargets.includes(valLower) && !bossTargetsFound.includes(valLower)) {
+                bossTargetsFound.push(valLower);
+                sfx.win();
+                addLogEntry(country.name, 0, true);
+                
+                // Cross it off the UI list
+                if (valLower === 'italy') document.getElementById('target1').style.textDecoration = 'line-through';
+                if (valLower === 'japan') document.getElementById('target2').style.textDecoration = 'line-through';
+                if (valLower === 'united states') document.getElementById('target3').style.textDecoration = 'line-through';
+                
+                // DID THEY WIN?
+                if (bossTargetsFound.length === 3) {
+                    stopFinalBossSequence();
+                    triggerFinalChoice();
+                }
+                input.value = '';
+                return; 
+            } else {
+                // Wrong guess during the boss fight deals BRUTAL damage
+                health -= 15;
+                sfx.err();
+                document.body.classList.add('taking-damage');
+                setTimeout(() => document.body.classList.remove('taking-damage'), 400);
+                addLogEntry(country.name, "ERR", false);
+                updateHealthUI();
+                if (health <= 0) triggerLoss();
+                input.value = '';
+                return;
+            }
+        }
+        // ------------------------------------------
+
+        // --- NARRATIVE HIJACK: THE BOSS TRAP ---
+        const activeLevel = currentLevelList[currentLevelIdx];
+        if (currentMode === 'story' && activeLevel.mutation === 'hardcore' && !hijackTriggered && levelGuessCount === 1) {
+            hijackTriggered = true; // Ensure it only happens on the first guess
+            
+            // 1. Freeze the controls
+            input.disabled = true;
+            document.querySelector('.btn-scan').disabled = true;
+            
+            // 2. Play the error sound and flash the screen
+            sfx.err();
+            document.body.classList.add('taking-damage');
+            
+            // 3. The Visual Hack
+            document.getElementById('radarReadout').innerText = "Did you really think it would be that easy?";
+            document.getElementById('radarReadout').style.color = "var(--danger)";
+            
+            // Make the compass point straight down at the input box
+            const arrow = document.getElementById('compassArrow');
+            arrow.style.opacity = '1';
+            arrow.style.transform = `rotate(180deg)`; 
+            arrow.style.transition = 'transform 0.2s ease'; // Snap to position
+            
+            // 4. Release the trap after 3 seconds
+            setTimeout(() => {
+                document.body.classList.remove('taking-damage');
+                document.getElementById('radarReadout').innerText = "SYSTEM REBOOTING...";
+                document.getElementById('radarReadout').style.color = "var(--text-muted)";
+                
+                setTimeout(() => {
+                    // Restore normal hardcore functionality
+                    input.disabled = false;
+                    document.querySelector('.btn-scan').disabled = false;
+                    input.value = ''; 
+                    input.focus();
+                    arrow.style.opacity = '0'; // Hide the arrow again (Hardcore rules)
+                    arrow.style.transition = 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)'; // Reset animation
+                }, 1500);
+            }, 3000);
+            
+            return; // STOP the guess from actually registering!
+        }
+        // ---------------------------------------
 
         sfx.scan();
         input.value = '';
@@ -2048,4 +2630,339 @@ function buyShopItem(itemType, cost, btnElement) {
     document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
     
     saveStoryProgress();
+}
+
+// --- NARRATIVE: THE TAD BOOT SEQUENCE ---
+function runBootSequence(onComplete) {
+    const bootScreen = document.getElementById('bootScreen');
+    const bootText = document.getElementById('bootText');
+    
+    // Un-hide the screen and ensure opacity is 1
+    bootScreen.style.display = 'flex';
+    bootScreen.style.opacity = '1';
+    
+    const messages = [
+        "ESTABLISHING TEMPORAL LINK...",
+        "AUTHENTICATING FIELD AGENT...",
+        "SYNCING TOPOGRAPHY DATA...",
+        "CONNECTION SECURE."
+    ];
+    
+    let i = 0;
+    const bootInterval = setInterval(() => {
+        if (i < messages.length) {
+            bootText.style.opacity = 0; 
+            setTimeout(() => {
+                bootText.innerText = messages[i];
+                bootText.style.opacity = 1; 
+                i++;
+            }, 300);
+        } else {
+            clearInterval(bootInterval);
+            setTimeout(() => {
+                bootScreen.style.opacity = 0;
+                setTimeout(() => {
+                    bootScreen.style.display = 'none';
+                    // Trigger the map load exactly as the screen disappears!
+                    if (onComplete) onComplete(); 
+                }, 800);
+            }, 600);
+        }
+    }, 1200); 
+}
+
+// --- DATA ARCHIVE LOGIC ---
+
+function openArchive() {
+    document.getElementById('archiveCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    document.getElementById('archiveModal').style.display = 'flex';
+    closeArchiveReader(); // Ensure reader is closed when opening
+    renderArchiveList();
+}
+
+function closeArchive() {
+    document.getElementById('archiveModal').style.display = 'none';
+}
+
+function renderArchiveList() {
+    const listContainer = document.getElementById('archiveFileList');
+    listContainer.innerHTML = '';
+    
+    // Check if the player has beaten the game
+    const playerEnding = localStorage.getItem('temporle_ending'); 
+
+    for (const [docId, docData] of Object.entries(archiveDatabase)) {
+        
+        // --- NEW: THE EPILOGUE FILTER ---
+        // Hide the loyalist file if they aren't a loyalist
+        if (docId === 'doc_epilogue_loyalist' && playerEnding !== 'loyalist') continue;
+        // Hide the rebel file if they aren't a rebel
+        if (docId === 'doc_epilogue_rebel' && playerEnding !== 'rebel') continue;
+        
+        // Check normal unlocks, but automatically unlock the epilogue files for free
+        let isUnlocked = storyProgress.unlockedArchives.includes(docId);
+        if (docId.includes('epilogue')) isUnlocked = true; 
+        // ---------------------------------
+        
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '10px 15px';
+        row.style.background = '#f3f4f6';
+        row.style.border = '1px solid #e5e7eb';
+        row.style.cursor = isUnlocked ? 'pointer' : 'default';
+
+        if (isUnlocked) {
+            row.innerHTML = `
+                <div style="font-weight: 600;"><i class="bi bi-file-earmark-text" style="color: var(--primary); margin-right: 8px;"></i> ${docData.title}</div>
+                <div style="font-size: 0.8rem; color: var(--success); font-weight: 700;">UNLOCKED</div>
+            `;
+            row.onclick = () => readArchive(docId);
+            row.onmouseover = () => row.style.background = '#e5e7eb';
+            row.onmouseout = () => row.style.background = '#f3f4f6';
+        } else {
+            row.innerHTML = `
+                <div style="font-weight: 600; color: #9ca3af;"><i class="bi bi-lock-fill" style="margin-right: 8px;"></i> ENCRYPTED FILE</div>
+                <button style="background: transparent; border: 2px solid #111827; color: #111827; padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 800; cursor: pointer; text-transform: uppercase; transition: all 0.2s;" onmouseover="this.style.background='#111827'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='#111827';" onclick="decryptArchive('${docId}', ${docData.cost}, event)">Decrypt (${docData.cost} <i class="bi bi-hexagon-fill"></i>)</button>
+            `;
+        }
+        
+        listContainer.appendChild(row);
+    }
+}
+
+function decryptArchive(docId, cost, event) {
+    event.stopPropagation(); // Prevents clicking the row accidentally
+    
+    if (storyProgress.chronitons < cost) {
+        sfx.err();
+        return;
+    }
+
+    sfx.click(); // Optional: Add a "decryption" sound later
+    storyProgress.chronitons -= cost;
+    storyProgress.unlockedArchives.push(docId);
+    
+    // Save to Cloud!
+    saveStoryProgress(); 
+    
+    // Update UI
+    document.getElementById('archiveCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    document.getElementById('mapCurrencyDisplay').innerHTML = `<i class="bi bi-hexagon-fill"></i> ${storyProgress.chronitons}`;
+    renderArchiveList();
+}
+
+function readArchive(docId) {
+    sfx.click();
+    document.getElementById('archiveFileList').style.display = 'none';
+    
+    const reader = document.getElementById('archiveReader');
+    reader.style.display = 'block';
+    reader.innerHTML = `<h3 style="margin-top: 0; color: var(--primary);">${archiveDatabase[docId].title}</h3>${archiveDatabase[docId].content}`;
+    
+    document.getElementById('closeReaderBtn').style.display = 'block';
+}
+
+function closeArchiveReader() {
+    document.getElementById('archiveReader').style.display = 'none';
+    document.getElementById('closeReaderBtn').style.display = 'none';
+    document.getElementById('archiveFileList').style.display = 'flex';
+}
+
+// --- NARRATIVE HIJACK: THE INPUT SABOTEUR ---
+const countryInput = document.getElementById('countryInput');
+
+if (countryInput) {
+    countryInput.addEventListener('input', (e) => {
+        // Only trigger on new typing (don't trap them if they are backspacing!)
+        if (e.inputType === 'deleteContentBackward') return;
+
+        const activeLevel = currentLevelList[currentLevelIdx];
+        
+        // If it's a Heavy Boss level, Subject Zero rolls a 20% chance to corrupt...
+        if (!gameOver && currentMode === 'story' && activeLevel && (activeLevel.mutation === 'hardcore_heavy' || activeLevel.mutation === 'hardcore')) {
+            if (Math.random() < 0.20 && countryInput.value.length > 0) {
+                // The Glitch Matrix
+                const glitchChars = "XZ0_/#@$*";
+                const randomChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                
+                // Swap the last typed letter with a glitch character
+                const val = countryInput.value;
+                countryInput.value = val.substring(0, val.length - 1) + randomChar;
+                
+                // Optional: Make the input box flicker red for a split second
+                countryInput.style.backgroundColor = "var(--danger)";
+                countryInput.style.color = "#fff";
+                setTimeout(() => {
+                    countryInput.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
+                    countryInput.style.color = "var(--text-main)";
+                }, 100);
+            }
+        }
+    });
+}
+
+// --- NARRATIVE HIJACK: THE MEMORY LEAK ---
+let memoryLeakTimer;
+let leakSeverity = 0;
+
+function startMemoryLeak() {
+    leakSeverity = 0;
+    const gameUI = document.getElementById('gameUI');
+    const compass = document.getElementById('compassArrow');
+
+    // Tick every 1 second
+    memoryLeakTimer = setInterval(() => {
+        if (gameOver) { stopMemoryLeak(); return; }
+        
+        leakSeverity++;
+
+        // Stage 1: Mild color corruption and blurring
+        if (leakSeverity > 5) {
+            gameUI.style.filter = `hue-rotate(${leakSeverity * 5}deg) blur(${Math.min(leakSeverity / 10, 1.5)}px)`;
+        }
+        
+        // Stage 2: Compass desync (it starts shrinking and rotating wildly)
+        if (leakSeverity > 10) {
+            compass.style.transform = `rotate(${Math.random() * 360}deg) scale(${Math.max(0.3, 1 - (leakSeverity/40))})`;
+        }
+        
+        // Stage 3: Total System Failure (Colors invert randomly)
+        if (leakSeverity > 20) {
+            if (Math.random() > 0.5) {
+                gameUI.style.filter += ' invert(0.9)';
+            }
+        }
+    }, 1000);
+}
+
+function stopMemoryLeak() {
+    clearInterval(memoryLeakTimer);
+    const gameUI = document.getElementById('gameUI');
+    const compass = document.getElementById('compassArrow');
+    
+    // Wipe all CSS distortions clean
+    if (gameUI) gameUI.style.filter = 'none';
+    if (compass) compass.style.transform = 'rotate(0deg) scale(1)';
+}
+
+// ==========================================
+// --- CHAPTER V: THE END OF THE TIMELINE ---
+// ==========================================
+
+function startFinalBossSequence() {
+    bossTargetsFound = [];
+    doomsdaySeconds = 60;
+    
+    // 1. Inject the Doomsday Clock into the UI
+    if (!document.getElementById('doomsdayClock')) {
+        const clock = document.createElement('div');
+        clock.id = 'doomsdayClock';
+        clock.style = "position: fixed; top: 15px; left: 50%; transform: translateX(-50%); font-size: 3rem; font-weight: 900; color: var(--danger); text-shadow: 0 0 15px rgba(220,38,38,0.8); z-index: 1000; font-family: monospace; letter-spacing: 2px;";
+        document.body.appendChild(clock);
+    }
+    document.getElementById('doomsdayClock').style.display = 'block';
+    
+    // 2. Rewrite the Objective Text
+    document.getElementById('scenarioText').innerHTML = `
+        <div style="color:var(--danger); font-weight: 900; margin-bottom: 10px;">SUBJECT ZERO IS ERASING MULTIPLE ERAS. SECURE ALL THREE:</div>
+        <ul style="text-align:left; color: var(--text-main); font-weight: 700; list-style-type: square; padding-left: 20px;">
+            <li id="target1" style="margin-bottom: 5px; transition: all 0.3s;">44 BC: The Ides of March </li>
+            <li id="target2" style="margin-bottom: 5px; transition: all 0.3s;">1600 AD: Battle of Sekigahara </li>
+            <li id="target3" style="transition: all 0.3s;">1945 AD: Trinity Test </li>
+        </ul>
+    `;
+
+    // 3. Start the Clock
+    doomsdayTimer = setInterval(() => {
+        if (gameOver) return stopFinalBossSequence();
+        
+        doomsdaySeconds--;
+        document.getElementById('doomsdayClock').innerText = `00:${doomsdaySeconds.toString().padStart(2, '0')}`;
+        
+        // At 10 seconds, make the clock shake
+        if (doomsdaySeconds <= 10) {
+            document.getElementById('doomsdayClock').style.animation = 'shake 0.2s infinite';
+        }
+        
+        if (doomsdaySeconds <= 0) {
+            stopFinalBossSequence();
+            triggerLoss(); // They ran out of time.
+        }
+    }, 1000);
+}
+
+function stopFinalBossSequence() {
+    clearInterval(doomsdayTimer);
+    const clock = document.getElementById('doomsdayClock');
+    if (clock) {
+        clock.style.display = 'none';
+        clock.style.animation = 'none';
+    }
+}
+
+// --- THE ULTIMATUM ---
+function triggerFinalChoice() {
+    gameOver = true;
+    stopMemoryLeak();
+    
+    // Create the dramatic black overlay
+    const choiceHTML = `
+    <div id="finalChoiceModal" class="overlay" style="z-index: 9999; display: flex; background: rgba(0,0,0,0.95); flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;">
+        <h1 style="color: var(--danger); font-size: 3rem; margin-bottom: 20px; font-family: monospace; letter-spacing: 2px;">TIMELINE SECURED. AWAITING DIRECTIVE.</h1>
+        <p style="color: #d1d5db; max-width: 600px; margin-bottom: 50px; font-size: 1.2rem; line-height: 1.8; font-weight: 600;">
+            The coordinates are locked. You hold the trigger. <br><br>
+            Execute the alignment, and the Directorate will incinerate these divergent branches. Billions will be erased to keep the Prime Timeline clean. <br><br>
+            Or... shatter the compass. Reject the alignment. Set history free.
+        </p>
+        <div style="display: flex; gap: 20px; width: 100%; max-width: 700px;">
+            <button style="flex: 1; padding: 20px; font-size: 1rem; font-weight: 900; cursor: pointer; background: #fff; color: #111; border: none; text-transform: uppercase; border-radius: 4px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.05)';" onmouseout="this.style.transform='scale(1)';" onclick="executeAlignment()">Execute Alignment</button>
+            <button style="flex: 1; padding: 20px; font-size: 1rem; font-weight: 900; cursor: pointer; background: transparent; color: var(--danger); border: 2px solid var(--danger); text-transform: uppercase; border-radius: 4px; transition: all 0.3s;" onmouseover="this.style.background='var(--danger)'; this.style.color='#fff'; this.style.transform='scale(1.05)';" onmouseout="this.style.background='transparent'; this.style.color='var(--danger)'; this.style.transform='scale(1)';" onclick="shatterCompass()">Shatter The Compass</button>
+        </div>
+    </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', choiceHTML);
+}
+
+// --- ENDING 1: THE LOYALIST ---
+function executeAlignment() {
+    localStorage.setItem('temporle_ending', 'loyalist'); // <--- ADD THIS LINE
+    document.getElementById('finalChoiceModal').remove();
+    document.getElementById('gameUI').style.display = 'none';
+    document.body.style.background = "#f9fafb";
+    
+    const endHTML = `
+    <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#f9fafb; z-index:10000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#111827;">
+        <i class="bi bi-check-circle-fill" style="color: var(--success); font-size: 5rem; margin-bottom: 20px;"></i>
+        <h1 style="font-weight: 900; letter-spacing: 2px; text-transform: uppercase;">Alignment Complete</h1>
+        <p style="color: #6b7280; font-weight: 600; max-width: 400px; text-align: center; margin-bottom: 30px;">Anomalies pruned. Prime Timeline secured. Thank you for your service, Agent.</p>
+        <button class="btn-modal" style="background: #111827; color: #fff; width: auto; padding: 15px 50px; font-size: 1.1rem; border-radius: 8px;" onclick="location.reload()">Return to Main Menu</button>
+    </div>`;
+    document.body.insertAdjacentHTML('beforeend', endHTML);
+}
+
+// --- ENDING 2: THE REBEL ---
+function shatterCompass() {
+    localStorage.setItem('temporle_ending', 'rebel'); // <--- ADD THIS LINE
+    document.getElementById('finalChoiceModal').remove();
+    
+    // Visually break the game UI
+    const gameUI = document.getElementById('gameUI');
+    gameUI.style.transition = "all 2s ease";
+    gameUI.style.transform = "scale(1.2) rotate(5deg)";
+    gameUI.style.filter = "blur(10px) invert(1)";
+    gameUI.style.opacity = "0";
+    
+    setTimeout(() => {
+        gameUI.style.display = 'none';
+        const endHTML = `
+        <div style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:10000; display:flex; flex-direction:column; justify-content:center; align-items:center; color:#fff;">
+            <i class="bi bi-infinity" style="color: var(--danger); font-size: 5rem; margin-bottom: 20px; animation: pulse 2s infinite;"></i>
+            <h1 style="font-weight: 900; letter-spacing: 2px; color: var(--danger); text-transform: uppercase;">History is Free</h1>
+            <p style="color: #9ca3af; font-weight: 600; max-width: 500px; text-align: center; line-height: 1.6; margin-bottom: 30px;">The compass is broken. The timeline has fractured into infinite, beautiful chaos. <br><br>Subject Zero thanks you.</p>
+            <button class="btn-modal" style="background: transparent; border: 2px solid var(--danger); color: var(--danger); width: auto; padding: 15px 50px; font-size: 1.1rem; border-radius: 8px; transition: all 0.3s;" onmouseover="this.style.background='var(--danger)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--danger)';" onclick="location.reload()">Enter The Unknown</button>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', endHTML);
+    }, 1500);
 }
