@@ -481,3 +481,67 @@
 .rebel-theme .node-btn * {
     color: #d1d5db !important; /* Dims the white folders to gray */
 }
+
+/* --- THE TIMELINE TREE VISUALIZER --- */
+.tree-wrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 40px;
+    padding: 20px 10px 40px 10px;
+    align-items: center; /* Centers the Boss node vertically */
+    min-height: 300px;
+}
+
+/* Custom Scrollbar for the horizontal tree */
+.tree-wrapper::-webkit-scrollbar { height: 8px; }
+.tree-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 4px; }
+.tree-wrapper::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+
+.tree-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    min-width: 260px;
+}
+
+/* Draws a subtle connecting line between columns */
+.tree-column:not(:last-child)::after {
+    content: "\F138"; /* Bootstrap bi-arrow-right icon */
+    font-family: "bootstrap-icons";
+    position: absolute;
+    right: -28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #d1d5db;
+    font-size: 1.2rem;
+}
+
+.node-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    text-align: left;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.node-card.locked {
+    background: #f3f4f6;
+    border: 1px dashed #d1d5db;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.node-card.unlocked:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 15px rgba(79, 70, 229, 0.15);
+    border-color: var(--primary);
+}
+
+.node-card.cleared {
+    border-left: 4px solid var(--success);
+}

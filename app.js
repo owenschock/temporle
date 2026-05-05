@@ -467,45 +467,119 @@ function renderTemporalMap(activeChapter = null) {
             container.insertAdjacentHTML('beforeend', cardHTML);
         }
     } 
-    // 3B. RENDER: THE INDIVIDUAL LEVEL MENU
+    // 3B. RENDER: THE INDIVIDUAL LEVEL MENU (THE NODE TREE)
     else {
         // Draw the "Back" Button & Chapter Header
         container.innerHTML = `
             <button class="btn-modal" style="background: transparent; border: 1px solid rgba(255,255,255,0.2); color: var(--text-muted); width: 100%; margin-bottom: 10px; font-size: 0.85rem;" onclick="renderTemporalMap()">
                 <i class="bi bi-arrow-left"></i> Return to Folders
             </button>
-            <div class="chapter-header" style="margin-top: 10px;">
-                <i class="bi bi-folder2-open"></i> ${activeChapter}
+            <div class="chapter-header" style="margin-top: 10px; margin-bottom: 20px;">
+                <i class="bi bi-diagram-3-fill"></i> ${activeChapter}
             </div>
+            <div id="treeContainer" class="tree-wrapper"></div>
         `;
 
-        // Draw all the buttons inside this specific Chapter
-        const nodesInChapter = groupedNodes[activeChapter].nodes;
-        nodesInChapter.forEach(node => {
-            let statusIcon = '<i class="bi bi-unlock-fill" style="color: var(--primary);"></i>';
-            let cssClass = 'node-btn';
-            
-            if (node.isCleared) {
-                statusIcon = '<i class="bi bi-check-circle-fill" style="color: var(--success);"></i>';
-                cssClass += ' cleared';
-            }
-            
-            let titleStyle = '';
-            if (node.id.includes('boss')) {
-                cssClass += ' boss-node'; 
-                titleStyle = 'color: var(--danger); text-shadow: 0 0 10px rgba(220, 38, 38, 0.5);';
-            }
+        const treeContainer = document.getElementById('treeContainer');
 
-            const nodeHTML = `
-                <button class="${cssClass}" onclick="startStoryNode('${node.id}')">
-                    <div class="node-status">${statusIcon}</div>
-                    <div class="node-era">${node.era}</div>
-                    <div class="node-title" style="${titleStyle}">${node.name}</div>
-                    <div class="node-desc">${node.description}</div>
-                    ${node.mutation !== 'none' ? `<div style="margin-top: 10px; font-size: 0.75rem; color: var(--danger); font-weight: 800; text-transform: uppercase;"><i class="bi bi-exclamation-triangle-fill"></i> Mutation: ${node.mutation.replace('_', ' ')}</div>` : ''}
-                </button>
-            `;
-            container.insertAdjacentHTML('beforeend', nodeHTML);
+        // --- ALGORITHM: CALCULATE NODE DEPTH FOR BRANCHING ---
+        // 1. Grab every single node in this chapter (even locked ones)
+        const chapterNodesData = Object.entries(storyNodes).filter(([id, data]) => data.chapter === activeChapter);
+        const nodeMap = {};
+        
+        chapterNodesData.forEach(([id, data]) => {
+            nodeMap[id] = { ...data, id, depth: 0, incomingEdges: 0 };
+        });
+
+        // 2. Count incoming connections to find the "Root" of the chapter
+        chapterNodesData.forEach(([id, data]) => {
+            if (data.unlocks) {
+                data.unlocks.forEach(u => {
+                    if (nodeMap[u]) nodeMap[u].incomingEdges++;
+                });
+            }
+        });
+
+        // 3. Breadth-First Search to assign the correct column (depth) to each node
+        let roots = Object.values(nodeMap).filter(n => n.incomingEdges === 0);
+        let queue = [...roots];
+        
+        while (queue.length > 0) {
+            let curr = queue.shift();
+            if (curr.unlocks) {
+                curr.unlocks.forEach(u => {
+                    if (nodeMap[u]) {
+                        // Push children to the next column. Bosses get pushed to the furthest column.
+                        nodeMap[u].depth = Math.max(nodeMap[u].depth, curr.depth + 1);
+                        queue.push(nodeMap[u]);
+                    }
+                });
+            }
+        }
+
+        // 4. Group the nodes by their Depth Column
+        const columns = [];
+        Object.values(nodeMap).forEach(n => {
+            if (!columns[n.depth]) columns[n.depth] = [];
+            columns[n.depth].push(n);
+        });
+
+        // --- RENDER THE COLUMNS ---
+        columns.forEach(colNodes => {
+            if (!colNodes) return;
+            
+            const colDiv = document.createElement('div');
+            colDiv.className = 'tree-column';
+
+            colNodes.forEach(node => {
+                const isCleared = storyProgress.clearedNodes.includes(node.id);
+                const isUnlocked = storyProgress.unlockedNodes.includes(node.id);
+                const isBoss = node.id.includes('boss');
+                
+                let cardHTML = '';
+
+                // STATE: LOCKED (Visible, but cloaked)
+                if (!isUnlocked && !isCleared) {
+                    cardHTML = `
+                        <div class="node-card locked">
+                            <div style="font-size: 1.5rem; color: #9ca3af; margin-bottom: 5px;"><i class="bi bi-lock-fill"></i></div>
+                            <div style="font-size: 0.7rem; font-weight: 800; color: #9ca3af; letter-spacing: 1px;">ENCRYPTED ERA</div>
+                            <div style="font-size: 0.9rem; font-weight: 800; color: #6b7280; margin-top: 5px;">Classified Target</div>
+                            <div style="font-size: 0.7rem; color: #9ca3af; margin-top: 10px;">Clear previous nodes to access.</div>
+                        </div>
+                    `;
+                } 
+                // STATE: UNLOCKED OR CLEARED
+                else {
+                    let statusIcon = '<i class="bi bi-unlock-fill" style="color: var(--primary);"></i>';
+                    let cssClass = 'node-card unlocked';
+                    let titleStyle = 'color: #111827;';
+                    
+                    if (isCleared) {
+                        statusIcon = '<i class="bi bi-check-circle-fill" style="color: var(--success);"></i>';
+                        cssClass += ' cleared';
+                    }
+                    if (isBoss) {
+                        titleStyle = 'color: var(--danger);';
+                    }
+
+                    cardHTML = `
+                        <div class="${cssClass}" onclick="startStoryNode('${node.id}')">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px;">
+                                <div style="font-size: 0.75rem; font-weight: 800; color: var(--primary);">${node.era}</div>
+                                <div>${statusIcon}</div>
+                            </div>
+                            <div style="font-size: 1.1rem; font-weight: 900; ${titleStyle} margin-bottom: 5px;">${node.name}</div>
+                            <div style="font-size: 0.8rem; color: #4b5563; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${node.description}</div>
+                            ${node.mutation !== 'none' ? `<div style="margin-top: 10px; font-size: 0.65rem; color: var(--danger); font-weight: 800; text-transform: uppercase; background: #fee2e2; padding: 3px 6px; border-radius: 4px; display: inline-block;"><i class="bi bi-exclamation-triangle-fill"></i> ${node.mutation.replace('_', ' ')}</div>` : ''}
+                        </div>
+                    `;
+                }
+                
+                colDiv.insertAdjacentHTML('beforeend', cardHTML);
+            });
+            
+            treeContainer.appendChild(colDiv);
         });
     }
 }
