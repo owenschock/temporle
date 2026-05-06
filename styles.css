@@ -1,3 +1,91 @@
+/* ========================================= */
+/* --- STEP 1: AMBIENT MESH BACKGROUND   --- */
+/* ========================================= */
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #e2e8f0; /* Darkened the base gray slightly so the lights pop */
+    position: relative;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Layer 1: Blue & Green Orbs (CRANKED OPACITY) */
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 0; 
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 15% 50%, rgba(79, 70, 229, 0.35) 0%, transparent 50%), 
+        radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.25) 0%, transparent 50%); 
+    animation: ambientDrift 20s ease-in-out infinite alternate;
+}
+
+/* Layer 2: Amber & Pink Orbs (CRANKED OPACITY) */
+body::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 0; 
+    pointer-events: none;
+    background-image:
+        radial-gradient(circle at 50% 80%, rgba(245, 158, 11, 0.25) 0%, transparent 50%), 
+        radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.25) 0%, transparent 50%); 
+    animation: ambientDrift 25s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes ambientDrift {
+    0% { transform: scale(1) translate(0, 0); }
+    50% { transform: scale(1.1) translate(2%, 2%); }
+    100% { transform: scale(1) translate(-2%, -2%); }
+}
+
+/* ========================================= */
+/* --- STEP 2: THE GLASSMORPHISM UPGRADE --- */
+/* ========================================= */
+
+/* Apply the heavy blur ONLY to the outer containers so they don't stack and turn solid white */
+.container,
+.modal,
+.nexus-card,
+.stats-grid {
+    background: rgba(255, 255, 255, 0.65) !important; 
+    backdrop-filter: blur(16px) saturate(180%); 
+    -webkit-backdrop-filter: blur(16px) saturate(180%); 
+    border: 1px solid rgba(255, 255, 255, 0.6) !important; 
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1); 
+}
+
+/* Inner elements just get a faint transparent tint, NO BLUR, to keep the UI legible */
+.glass-card,
+.radar-box {
+    background: rgba(255, 255, 255, 0.4) !important; 
+    backdrop-filter: none !important; 
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Tweak the specific Integrity/Chroniton stat box on the map screen */
+#temporalMapUI > div > div:first-child {
+    background: rgba(255, 255, 255, 0.4) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    box-shadow: none !important;
+}
+
+/* Make sure the text input box feels glassy but distinct */
+.input-wrapper input {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+
 
         :root {
             --text-main: #1f2937;
@@ -13,18 +101,7 @@
             --radius: 24px;
         }
 
-        body {
-            background: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            transition: background 1.5s ease;
-        }
+        
 
         .container {
             width: 100%;
@@ -442,11 +519,12 @@
 
 /* --- POST-GAME METAMORPHOSIS --- */
 
-/* THE LOYALIST (TAD PRIME) */
+/* THE LOYALIST (TAD PRIME) - GLASS COMPLIANT */
 .loyalist-theme {
-    background: #ffffff !important;
+    background: rgba(255, 255, 255, 0.4) !important; /* Soft, transparent white instead of a solid brick */
+    border: 1px solid rgba(212, 175, 55, 0.4) !important; /* Subtle gold rim */
     border-radius: 12px;
-    box-shadow: 0 0 40px rgba(212, 175, 55, 0.1);
+    box-shadow: inset 0 0 40px rgba(212, 175, 55, 0.1); /* Inner gold glow */
 }
 .loyalist-theme h2 {
     color: #d4af37 !important; /* Pristine Gold */
@@ -463,11 +541,14 @@
     box-shadow: 0 2px 4px rgba(212, 175, 55, 0.4);
 }
 
-/* THE REBEL (HACKED TERMINAL) */
+/* THE REBEL (HACKED TERMINAL) - GLASS COMPLIANT */
 .rebel-theme {
-    background-image: repeating-linear-gradient(0deg, rgba(17,24,39,0.95), rgba(17,24,39,0.95) 2px, rgba(31,41,55,0.95) 2px, rgba(31,41,55,0.95) 4px) !important;
+    /* Dropped the opacity from 0.95 to 0.7 so the ambient lights still bleed through the scanlines */
+    background-image: repeating-linear-gradient(0deg, rgba(17,24,39,0.7), rgba(17,24,39,0.7) 2px, rgba(31,41,55,0.7) 2px, rgba(31,41,55,0.7) 4px) !important;
+    border: 1px solid rgba(220, 38, 38, 0.5) !important; /* Red rim lighting */
     border-radius: 12px;
     padding: 20px;
+    box-shadow: inset 0 0 30px rgba(220, 38, 38, 0.1); /* Inner red glow */
 }
 .rebel-theme h2 {
     color: var(--danger) !important;
@@ -475,11 +556,11 @@
     animation: glitch-skew 1.5s infinite linear alternate-reverse;
 }
 .rebel-theme .node-btn {
-    background: rgba(17, 24, 39, 0.8) !important;
+    background: rgba(17, 24, 39, 0.6) !important;
     border-color: var(--danger) !important;
 }
 .rebel-theme .node-btn * {
-    color: #d1d5db !important; /* Dims the white folders to gray */
+    color: #d1d5db !important; 
 }
 
 /* --- THE TIMELINE TREE VISUALIZER --- */

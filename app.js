@@ -450,15 +450,15 @@ function renderTemporalMap(activeChapter = null) {
             const iconColor = isFullyCleared ? 'var(--success)' : 'var(--primary)';
 
             const cardHTML = `
-                <button style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid ${iconColor}; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; padding: 20px; width: 100%; cursor: pointer; transition: all 0.2s ease; font-family: inherit;" 
+                <button style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid ${iconColor}; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; padding: 20px; width: 100%; cursor: pointer; transition: all 0.2s ease; font-family: inherit; text-align: left;" 
                 onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.1)';" 
                 onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)';" 
                 onclick="renderTemporalMap('${chapterName}')">
-                    <div style="text-align: left;">
-                        <div style="font-size: 1.1rem; font-weight: 900; color: #111827;"><i class="bi bi-folder2-open" style="color: ${iconColor}; margin-right: 8px;"></i> ${chapterName}</div>
+                    <div style="flex: 1; min-width: 0; padding-right: 15px;">
+                        <div style="font-size: 1.1rem; font-weight: 900; color: #111827; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><i class="bi bi-folder2-open" style="color: ${iconColor}; margin-right: 8px;"></i> ${chapterName}</div>
                         <div style="font-size: 0.8rem; color: #6b7280; margin-top: 5px;">Access temporal coordinates...</div>
                     </div>
-                    <div style="text-align: right;">
+                    <div style="text-align: right; min-width: 75px;">
                         <div style="font-size: 0.7rem; font-weight: 800; color: ${iconColor}; text-transform: uppercase; letter-spacing: 1px;">Progress</div>
                         <div style="font-size: 1.2rem; font-weight: 900; color: #111827;">${chapterData.clearedCount} / ${chapterData.totalCount}</div>
                     </div>
@@ -1698,7 +1698,7 @@ const nodeTransmissions = {
         document.getElementById('loseModal').style.display = 'none';
         document.getElementById('endGameModal').style.display = 'none';
 
-        updateBackground(level.year);
+        // updateBackground(level.year);
         updateHealthUI();
         
         document.getElementById('yearVal').innerText = level.year;
