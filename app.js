@@ -384,6 +384,7 @@ let storyProgress = {
 
 // Draws the categorized missions OR the chapter select screen
 function renderTemporalMap(activeChapter = null) {
+    currentActiveChapter = activeChapter; // <-- ADD THIS LINE
     const container = document.getElementById('nodeContainer');
     container.innerHTML = ''; // Clear it out
     // --- POST-GAME METAMORPHOSIS CHECK ---
@@ -550,10 +551,12 @@ function renderTemporalMap(activeChapter = null) {
                     `;
                 } 
                 // STATE: UNLOCKED OR CLEARED
+                // STATE: UNLOCKED OR CLEARED
                 else {
                     let statusIcon = '<i class="bi bi-unlock-fill" style="color: var(--primary);"></i>';
                     let cssClass = 'node-card unlocked';
                     let titleStyle = 'color: #111827;';
+                    let warningBadge = ''; // <-- NEW
                     
                     if (isCleared) {
                         statusIcon = '<i class="bi bi-check-circle-fill" style="color: var(--success);"></i>';
@@ -561,6 +564,8 @@ function renderTemporalMap(activeChapter = null) {
                     }
                     if (isBoss) {
                         titleStyle = 'color: var(--danger);';
+                        // <-- NEW: The Boss Health Warning Badge
+                        warningBadge = `<div style="margin-top: 10px; font-size: 0.65rem; color: #fff; background: var(--danger); font-weight: 800; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; display: inline-block; box-shadow: 0 0 10px rgba(220, 38, 38, 0.4);"><i class="bi bi-shield-slash-fill"></i> MAX INTEGRITY CAPPED AT 75%</div>`;
                     }
 
                     cardHTML = `
@@ -571,7 +576,10 @@ function renderTemporalMap(activeChapter = null) {
                             </div>
                             <div style="font-size: 1.1rem; font-weight: 900; ${titleStyle} margin-bottom: 5px;">${node.name}</div>
                             <div style="font-size: 0.8rem; color: #4b5563; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${node.description}</div>
-                            ${node.mutation !== 'none' ? `<div style="margin-top: 10px; font-size: 0.65rem; color: var(--danger); font-weight: 800; text-transform: uppercase; background: #fee2e2; padding: 3px 6px; border-radius: 4px; display: inline-block;"><i class="bi bi-exclamation-triangle-fill"></i> ${node.mutation.replace('_', ' ')}</div>` : ''}
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                                ${node.mutation !== 'none' ? `<div style="margin-top: 10px; font-size: 0.65rem; color: var(--danger); font-weight: 800; text-transform: uppercase; background: #fee2e2; padding: 4px 8px; border-radius: 4px; display: inline-block;"><i class="bi bi-exclamation-triangle-fill"></i> ${node.mutation.replace('_', ' ')}</div>` : ''}
+                                ${warningBadge}
+                            </div>
                         </div>
                     `;
                 }
@@ -678,7 +686,7 @@ function completeCurrentNode() {
     } else {
         // No story? Just go back to the map.
         document.getElementById('temporalMapUI').style.display = 'block';
-        renderTemporalMap();
+        renderTemporalMap(currentActiveChapter);
     }
 }
 
@@ -1406,6 +1414,15 @@ const nodeTransmissions = {
     function parseYear(yStr) { let y = parseInt(yStr); return yStr.includes("BC") ? -y : y; }
     storyLevels.sort((a,b) => parseYear(a.year) - parseYear(b.year));
 
+
+    function getLocalToday() {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+    }
+
     // GAME STATE
     let totalEndlessDistance = 0;
     let totalEndlessGuesses = 0;
@@ -1430,6 +1447,7 @@ const nodeTransmissions = {
     let doomsdayTimer = null;
     let doomsdaySeconds = 60;
     let bossTargetsFound = [];
+    let currentActiveChapter = null;
 
     // PRNG for Daily Seed
     function mulberry32(a) {
@@ -1487,8 +1505,7 @@ const nodeTransmissions = {
 
     function startDaily() {
         currentLevelList = dailyLevels;
-        const today = new Date().toISOString().slice(0, 10);
-        
+        const today = getLocalToday();        
         // Calculate Index FIRST so we know the level even if they already played
         const dateNum = parseInt(today.replace(/-/g, ''));
         let seed = Math.imul(dateNum, 1597334677); 
@@ -1569,12 +1586,15 @@ const nodeTransmissions = {
             // If it's a daily win, populate the debrief
             populateDebrief('winDebrief', dailyLevels[currentLevelIdx]);
 
-            const today = new Date().toISOString().slice(0, 10);
+            const today = getLocalToday();
             localStorage.setItem('temporle_daily_' + today, 'win'); // Locks the day
+            
+            // THE FIX: Generate the share text!
+            generateShareText(true);
+            
             saveAndRenderStats(true); // Updates personal stats
             startTimer(); // Starts the countdown
-
-        } else if (currentMode === 'story') {
+        }   else if (currentMode === 'story') {
             // NEW: The Story Mode intercept!
             dailyUI.classList.add('hidden');
             nextBtn.classList.remove('hidden');
@@ -1662,8 +1682,12 @@ const nodeTransmissions = {
         
         // --- ADD THIS BLOCK FOR DAILY LOSSES ---
         if (currentMode === 'daily') {
-            const today = new Date().toISOString().slice(0, 10);
+            const today = getLocalToday();
             localStorage.setItem('temporle_daily_' + today, 'loss'); // Locks the day
+            
+            // THE FIX: Generate the share text!
+            generateShareText(false);
+            
             saveAndRenderStats(false); // Updates personal stats
             
             document.getElementById('dailyFailUI').classList.remove('hidden');
@@ -2085,7 +2109,21 @@ const nodeTransmissions = {
             document.body.classList.add('taking-damage');
             setTimeout(() => document.body.classList.remove('taking-damage'), 400);
 
-            if (health <= 0) { health = 0; triggerLoss(); }
+           if (health <= 0) { 
+                health = 0; 
+                updateHealthUI(); 
+                
+                gameOver = true; 
+
+                if (currentMode === 'endless') {
+                    // FIX: Use the actual variable tracking your depth!
+                    const finalScore = anomalyLevel; 
+                    checkAnomalyHighScore(finalScore); 
+                } else {
+                    triggerLoss(); 
+                }
+                return; 
+            }
         }
 
         if (currentMode === 'daily') {
@@ -2395,7 +2433,7 @@ const nodeTransmissions = {
 
     // --- SHARE EMOJI LOGIC ---
     function generateShareText(won) {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = getLocalToday();
         
         // Chunk the grid into lines of 5 emojis so it doesn't break text message formatting
         let grid = "";
@@ -2411,11 +2449,15 @@ const nodeTransmissions = {
         localStorage.setItem('temporle_share_' + today, shareText);
     }
 
-    function shareResult(btnElement) {
-        const today = new Date().toISOString().slice(0, 10);
+function shareResult(btnElement) {
+        const today = getLocalToday();
         const text = localStorage.getItem('temporle_share_' + today);
         
-        if (!text) return;
+        // THE FIX: Stop failing silently!
+        if (!text) {
+            alert("Share data missing or corrupted for today's run. Try again tomorrow!");
+            return;
+        }
 
         // Visual Feedback Function
         const triggerFeedback = () => {
@@ -2587,7 +2629,7 @@ const nodeTransmissions = {
         }
     }
 
-    // --- LEADERBOARD LOGIC ---
+// --- LEADERBOARD LOGIC ---
     async function showLeaderboard() {
         document.getElementById('leaderboardModal').style.display = 'flex';
         document.getElementById('leaderboardLoading').classList.remove('hidden');
@@ -2596,14 +2638,14 @@ const nodeTransmissions = {
         list.innerHTML = ''; // Clear old data
 
         try {
-            // Call your live Render API!
-            const res = await fetch('https://temporleapi.onrender.com/api/leaderboard?mode=endless');
+            // FIX: Point to the new Arcade API endpoint!
+            const res = await fetch('https://temporleapi.onrender.com/api/anomaly/top10');
             if (!res.ok) throw new Error("Failed to fetch");
             const data = await res.json();
 
             data.forEach((run, index) => {
-                // Format the UTC timestamp into a readable local date
-                const dateObj = new Date(run.date);
+                // FIX: Database now uses 'created_at' for the timestamp
+                const dateObj = new Date(run.created_at);
                 const dateStr = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
                 
                 const row = document.createElement('div');
@@ -2615,11 +2657,12 @@ const nodeTransmissions = {
                 if (index === 1) rankDisplay = '🥈';
                 if (index === 2) rankDisplay = '🥉';
 
+                // FIX: Inject the 'initials' and 'score' variables returned by C#
                 row.innerHTML = `
                     <div class="lb-rank">${rankDisplay}</div>
                     <div class="lb-date">${dateStr}</div>
-                    <div class="lb-health" style="color: var(--primary);">${run.depth}</div>
-                    <div class="lb-guesses">${run.guesses}</div>
+                    <div class="lb-initials" style="font-weight: 900; letter-spacing: 2px; color: var(--text-main);">${run.initials}</div>
+                    <div class="lb-health" style="color: var(--primary); font-weight: 900;">${run.score}</div>
                 `;
                 list.appendChild(row);
             });
@@ -3039,4 +3082,78 @@ function shatterCompass() {
         </div>`;
         document.body.insertAdjacentHTML('beforeend', endHTML);
     }, 1500);
+}
+
+// Change this to your actual Render API URL when deploying
+// The actual Render API URL
+const API_BASE_URL = "https://temporleapi.onrender.com/api/anomaly";
+
+// 1. Fetch the Global Leaderboard
+async function fetchGlobalLeaderboard() {
+    try {
+        // FIX: Hardcoded Render URL
+        const response = await fetch('https://temporleapi.onrender.com/api/anomaly/top10');
+        const data = await response.json();
+        return data; 
+    } catch (err) {
+        console.error("Failed to connect to Directorate servers:", err);
+        return [];
+    }
+}
+
+async function submitArcadeScore() {
+    const initials = document.getElementById('arcadeInitials').value;
+    const score = parseInt(document.getElementById('arcadeFinalScore').innerText);
+
+    if (initials.length !== 3) {
+        alert("Designation must be exactly 3 letters.");
+        return;
+    }
+
+    const submitBtn = document.querySelector('#arcadeEntryModal button');
+    submitBtn.innerText = "TRANSMITTING...";
+    submitBtn.disabled = true;
+
+    try {
+        const res = await fetch('https://temporleapi.onrender.com/api/anomaly/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initials: initials, score: score })
+        });
+
+        // Hide the arcade modal no matter what
+        document.getElementById('arcadeEntryModal').style.display = 'none';
+
+        // THE FIX: Trigger your standard Game Over screen so the player gets the "Reboot" button!
+        triggerLoss(); 
+        
+    } catch (err) {
+        console.error("Transmission error:", err);
+        document.getElementById('arcadeEntryModal').style.display = 'none';
+        
+        // Even if the network actually fails, we still need to let them reboot
+        triggerLoss(); 
+    }
+}
+
+async function checkAnomalyHighScore(finalScore) {
+    // Mask the database delay with a cool UI update so the player knows it's thinking
+    const radar = document.getElementById('radarReadout');
+    if (radar) {
+        radar.innerText = "TRANSMITTING TO DIRECTORATE...";
+        radar.style.color = "var(--accent)";
+    }
+
+    const topScores = await fetchGlobalLeaderboard();
+    
+    // Check if the board isn't full yet, or if they beat the 10th place score
+    const isHighScore = topScores.length < 10 || (topScores.length > 0 && finalScore > topScores[topScores.length - 1].score);
+
+    // finalScore >= 0 allows for Kamikaze testing on Level 0!
+    if (isHighScore && finalScore >= 0) { 
+        document.getElementById('arcadeFinalScore').innerText = finalScore;
+        document.getElementById('arcadeEntryModal').style.display = 'flex';
+    } else {
+        triggerLoss(); 
+    }
 }

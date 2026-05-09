@@ -253,6 +253,27 @@
     </div>
 </div>
 
+<div id="arcadeEntryModal" class="overlay">
+    <div class="modal" style="border-color: var(--accent); box-shadow: 0 0 40px rgba(245, 158, 11, 0.2);">
+        <h2 style="color: var(--accent); font-weight: 900; letter-spacing: 2px; margin-bottom: 5px;"><i class="bi bi-trophy-fill"></i> NEW ANOMALY RECORD</h2>
+        <p style="color: var(--text-muted); font-weight: 700; margin-bottom: 20px;">The timeline has collapsed, but your score survived.</p>
+        
+        <div style="font-size: 4rem; font-weight: 900; color: var(--text-main); margin: 20px 0; text-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <span id="arcadeFinalScore">0</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 0.8rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px;">Enter Designation (3 Letters)</label>
+            <input type="text" id="arcadeInitials" maxlength="3" placeholder="___" 
+                   style="font-size: 2.5rem; font-weight: 900; text-align: center; width: 150px; letter-spacing: 5px; text-transform: uppercase;"
+                   oninput="this.value = this.value.toUpperCase().replace(/[^A-Z]/g, '').substring(0, 3)"
+                   onkeydown="if(event.key === 'Enter') submitArcadeScore()">
+        </div>
+
+        <button class="btn-modal" style="background: var(--accent); border-color: var(--accent);" onclick="submitArcadeScore()">TRANSMIT TO DIRECTORATE</button>
+    </div>
+</div>
+
 <div id="shopModal" class="overlay" style="z-index: 300; display: none;">
         <div class="modal" style="max-width: 500px; border-color: var(--accent); text-align: left;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -398,11 +419,12 @@
         <div id="leaderboardLoading" style="font-weight: 700; color: var(--text-muted); padding: 20px;">Fetching timeline data...</div>
         
         <div id="leaderboardContent" class="hidden">
-            <div style="display: flex; font-weight: 800; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 2px solid rgba(0,0,0,0.1); padding-bottom: 5px; margin-bottom: 15px;">
-                <div style="width: 45px;">Rank</div>
-                <div style="flex: 1; text-align: left;">Date</div>
-                <div style="width: 80px; text-align: center;">Depth</div>
-                <div style="width: 80px; text-align: center;">Guesses</div>
+            <!-- Change your old headers to something like this: -->
+            <div style="display: flex; justify-content: space-between; font-size: 0.7rem; font-weight: 900; text-transform: uppercase; padding: 0 10px; margin-bottom: 10px; border-bottom: 2px solid #e5e7eb; padding-bottom: 5px;">
+                    <span>Rank</span>
+                    <span>Date</span>
+                    <span>Agent</span>
+                    <span>Depth</span>
             </div>
             <div id="leaderboardList" style="display: flex; flex-direction: column; max-height: 400px; overflow-y: auto;">
             </div>
